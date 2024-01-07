@@ -92,6 +92,12 @@ struct ITSImpactParameterParamConfig : public o2::conf::ConfigurableParamHelper<
   O2ParamDef(ITSImpactParameterParamConfig, "ITSImpactParameterParam");
 };
 
+struct ITSEfficiencyParamConfig : public o2::conf::ConfigurableParamHelper<ITSEfficiencyParamConfig> {
+  std::string outFileName = "ITS_efficiencyStudy.root";
+
+  O2ParamDef(ITSEfficiencyParamConfig, "ITSEfficiencyParam");
+};
+
 } // namespace study
 } // namespace its
 } // namespace o2
