@@ -14,6 +14,7 @@
 
 #include "CommonUtils/TreeStreamRedirector.h"
 #include "DataFormatsITS/TrackITS.h"
+#include "DataFormatsITSMFT/ROFRecord.h"
 #include "DataFormatsITSMFT/CompCluster.h"
 #include "DataFormatsGlobalTracking/RecoContainer.h"
 #include "DetectorsBase/GRPGeomHelper.h"
@@ -79,7 +80,7 @@ class EfficiencyStudy : public Task
   void endOfStream(EndOfStreamContext&) final;
   void finaliseCCDB(ConcreteDataMatcher&, void*) final;
   void initialiseRun(o2::globaltracking::RecoContainer&);
-  void process();
+  void process(o2::globaltracking::RecoContainer&);
 
  private:
   void updateTimeDependentParams(ProcessingContext& pc);
@@ -124,7 +125,7 @@ void EfficiencyStudy::run(ProcessingContext& pc)
 
   updateTimeDependentParams(pc); // Make sure this is called after recoData.collectData, which may load some conditions
   initialiseRun(recoData);
-  process();
+  process(recoData);
 }
 
 void EfficiencyStudy::initialiseRun(o2::globaltracking::RecoContainer& recoData)
@@ -137,21 +138,190 @@ void EfficiencyStudy::initialiseRun(o2::globaltracking::RecoContainer& recoData)
   mClustersROFRecords = recoData.getITSClustersROFRecords();
   mClustersMCLCont = recoData.getITSClustersMCLabels();
   mInputITSidxs = recoData.getITSTracksClusterRefs();
-  LOGP(info, "+++");
 
-
-  LOGP(info, "** Found in {} rofs:\n\t- {} clusters\n\t",
-        mClustersROFRecords.size(),  mClusters.size());
-
-  LOGP(info, "** Found in {} rofs:\n\t- {} tracks",
-       mTracksROFRecords.size(), mTracks.size());
-
-  // LOGP(info, "** Found {} sources from kinematic files", mKineReader->getNSources()); !!!!!!!!!!! NOT WORKING
+  // LOGP(info, "** Found in {} rofs:\n\t- {} clusters\n\t",
+  //       mClustersROFRecords.size(),  mClusters.size());
 }
 
-void EfficiencyStudy::process()
+void EfficiencyStudy::process(o2::globaltracking::RecoContainer& recoData)
 {
   LOGP(info, "--------------- process");
+
+  // std::unordered_set<o2::MCCompLabel> clsLabels;
+  // std::unordered_map<o2::MCCompLabel, std::tuple<int,std::vector<o2::itsmft::CompClusterExt>>> mapLab_countClus;
+  std::unordered_map<o2::MCCompLabel, std::vector<o2::itsmft::CompClusterExt>> mapLab_vecClus;
+  std::unordered_map<o2::MCCompLabel, std::vector<std::tuple<o2::itsmft::CompClusterExt,unsigned int >>> mapLab_vecClusROF;
+  std::unordered_map<o2::MCCompLabel, std::unordered_set<int>> mapLab_setClus;
+  std::unordered_map<o2::MCCompLabel, std::unordered_set<int>> mapLab_setROF;
+
+  std::unordered_map<o2::MCCompLabel, std::unordered_set<std::string>> mapLab_setClusROF;
+  // std::unordered_map<o2::MCCompLabel, std::unordered_set<std::tuple<int,unsigned int >>> mapLab_setClusROF;
+
+  std::unordered_map<int, std::vector<std::tuple<o2::MCCompLabel, o2::itsmft::CompClusterExt, unsigned int>>> mapLay_labClusRof;  // {layer, vec(label, cluster, ROF)}
+
+  unsigned int rofIndex = 0;
+  unsigned int rofNEntries = 0;
+
+  for (unsigned int iROF = 0; iROF < mTracksROFRecords.size(); iROF++) {
+    rofIndex = mTracksROFRecords[iROF].getFirstEntry();
+    rofNEntries = mTracksROFRecords[iROF].getNEntries();
+    LOGP(info, "\n");
+    LOGP(info, "Track ROF: {}, entries: {}", iROF, rofNEntries);
+
+    for (unsigned int iTrack=rofIndex; iTrack < rofIndex+rofNEntries; iTrack++){
+      auto ITStrack = recoData.getITSTrack(iTrack);
+
+      int firstClus = ITStrack.getFirstClusterEntry(); // get the first cluster of the track
+      int ncl = ITStrack.getNumberOfClusters();        // get the number of clusters of the track
+
+
+      auto& tracklab = mTracksMCLabels[iTrack];
+      if (tracklab.isFake())
+        continue;
+
+      LOGP(info, "\n");
+      LOGP(info, "Track number: {}, track ID: {}, event ID: {}, source ID: {}, isFake: {}, N Clusters: {}", iTrack, tracklab.getTrackID(), tracklab.getEventID(), tracklab.getSourceID(), tracklab.isFake(), ncl);
+      LOGP(info, "From cluster labels: {}, {} ", iTrack, ncl);
+
+      for (int icl = 0; icl < ncl; icl++) { // loop on clusters associated to the track
+        auto& clus = mClusters[mInputITSidxs[firstClus + icl]];
+        auto layer = mGeometry->getLayer(clus.getSensorID());
+
+        std::tuple<o2::MCCompLabel, o2::itsmft::CompClusterExt, unsigned int> lab_clus;
+        auto labs = mClustersMCLCont->getLabels(mInputITSidxs[firstClus + icl]); // get labels of clusters associated to the track
+        for (auto lab : labs) {
+          lab_clus = std::make_tuple(lab, clus, iROF);
+          mapLay_labClusRof[layer].push_back(lab_clus);
+          LOGP(info, "Cluster # {}: Track ID from clus: {}, Track ID from track: {}, Event ID:{}, Source ID:{}, chip: {}, index {}, rof: {}", icl, lab.getTrackID(), tracklab.getTrackID(), lab.getEventID(), lab.getSourceID(), clus.getChipID(), mInputITSidxs[firstClus + icl], iROF);
+        }
+
+      } // end loop on clusters
+
+
+
+    } // end loop on tracks
+
+  } // end loop on ROFRecords array
+  
+
+
+
+////////////////////////////
+
+// for (unsigned int iTrack{0}; iTrack < mTracks.size(); ++iTrack) { // loop over the tracks
+//   auto ITStrack = recoData.getITSTrack(iTrack);                   // get the ITS track
+//   // auto ITStrackROFRecords = recoData.getITSTracksROFRecords();
+//   // LOGP(info, "size: {}", ITStrackROFRecords.size());
+
+//   int firstClus = ITStrack.getFirstClusterEntry(); // get the first cluster of the track
+//   int ncl = ITStrack.getNumberOfClusters();        // get the number of clusters of the track
+
+//   auto& tracklab = mTracksMCLabels[iTrack];
+//   if (tracklab.isFake())
+//     continue;
+
+//   LOGP(info, "\n");
+//   LOGP(info, "Track number: {}, track ID: {}, event ID: {}, source ID: {}, isFake: {}, N Clusters: {}", iTrack, tracklab.getTrackID(), tracklab.getEventID(), tracklab.getSourceID(), tracklab.isFake(), ncl);
+//   LOGP(info, "From cluster labels: {}, {} ", iTrack, ncl);
+
+//   for (int icl = 0; icl < ncl; icl++) { // loop on clusters associated to the track
+//     auto& clus = mClusters[mInputITSidxs[firstClus + icl]];
+//     auto layer = mGeometry->getLayer(clus.getSensorID());
+
+//     std::tuple<o2::MCCompLabel, o2::itsmft::CompClusterExt> lab_clus;
+//     auto labs = mClustersMCLCont->getLabels(mInputITSidxs[firstClus + icl]); // get labels of clusters associated to the track
+//     for (auto lab : labs) {
+//       lab_clus = std::make_tuple(lab, clus);
+//       mapLay_labClus[layer].push_back(lab_clus);
+//       LOGP(info, "Cluster # {}: Track ID from clus: {}, Track ID from track: {}, Event ID:{}, Source ID:{}, chip: {}, index {}", icl, lab.getTrackID(), tracklab.getTrackID(), lab.getEventID(), lab.getSourceID(), clus.getChipID(), mInputITSidxs[firstClus + icl]);
+//     }
+
+//   } // loop on clusters
+// } // loop on tracks
+
+// Going layer by layer
+for (auto labclsROFVector : mapLay_labClusRof) {                                       // loop on layers -> each value is a vector of tuples (label, std::vector<cluster>)
+  mapLab_vecClus.clear();                                                        // reusing the same map for each layer
+  mapLab_vecClusROF.clear();                                                        // reusing the same map for each layer
+  mapLab_setClus.clear();                                                        // reusing the same map for each layer
+  mapLab_setROF.clear();                                                        // reusing the same map for each layer
+  mapLab_setClusROF.clear();                                                        // reusing the same map for each layer
+  // mapLab_setClusROF.clear();                                                        // reusing the same map for each layer
+  for (auto labcls : labclsROFVector.second) {                                      // loop on vector of tuples (label, cluster) -> each element is a tuple (label, cluster)
+    mapLab_vecClus[std::get<0>(labcls)].push_back(std::get<1>(labcls));          // mapLab_vecClus[label].push_back(cluster)
+    mapLab_vecClusROF[std::get<0>(labcls)].push_back(std::make_tuple(std::get<1>(labcls), std::get<2>(labcls)));          // mapLab_vecClus[label].push_back(cluster)
+    mapLab_setClus[std::get<0>(labcls)].insert(std::get<1>(labcls).getChipID()); // mapLab_setClus[label].insert(chipid)
+    mapLab_setROF[std::get<0>(labcls)].insert(std::get<2>(labcls)); // mapLab_setClus[label].insert(chipid)
+
+    auto layer = mGeometry->getLayer(std::get<1>(labcls).getSensorID());
+    auto stave = mGeometry->getStave(std::get<1>(labcls).getSensorID());
+    auto chipInStave1 = mGeometry->getChipIdInStave(std::get<1>(labcls).getSensorID());
+    auto mod = mGeometry->getModule(std::get<1>(labcls).getSensorID());
+    auto hs = mGeometry->getHalfStave(std::get<1>(labcls).getSensorID());
+    auto name = mGeometry->getSymbolicName(std::get<1>(labcls).getSensorID());
+    auto chipInStave2 = mGeometry->getChipIdInModule(std::get<1>(labcls).getSensorID());
+    // std::string chipROF ="chip: "+std::to_string(std::get<1>(labcls).getChipID()) + "---> L" + std::to_string(layer) + "_S" + std::to_string(stave) + "_C" + std::to_string(chipInStave1)+"/"+std::to_string(chipInStave2) + " ROF:"+std::to_string(std::get<2>(labcls));
+    std::string chipROF ="chip: "+std::to_string(std::get<1>(labcls).getChipID()) + "---> L" + name + " ROF:"+std::to_string(std::get<2>(labcls));
+    // std::string clusROF = std::to_string(std::get<1>(labcls).getChipID()) +"_"+std::to_string(std::get<2>(labcls));
+    // mapLab_setClusROF[std::get<0>(labcls)].insert(clusROF); // mapLab_setClus[label].insert(chipid)
+    mapLab_setClusROF[std::get<0>(labcls)].insert(chipROF); // mapLab_setClus[label].insert(chipid)
+    
+    // mapLab_setClusROF[std::get<0>(labcls)].insert(std::make_tuple(std::get<1>(labcls).getChipID(), std::get<2>(labcls))); // mapLab_setClus[label].insert(chipid)
+  }
+
+  // if (labclsVector.first!=0) continue;
+
+  // // Printing the number of clusters per label
+  LOGP(info, "Layer {}:", labclsROFVector.first);
+  // for (auto it : mapLab_vecClusROF) {
+  //   LOGP(info, "Label: Track ID: {}, Event ID: {}, Source ID: {}, Count: {}",
+  //        it.first.getTrackID(),
+  //        it.first.getEventID(),
+  //        it.first.getSourceID(),
+  //        it.second.size());
+  //   for (auto clus : it.second) {
+  //     LOGP(info, "chipID: {}, ROF: {}", std::get<0>(clus).getChipID(), std::get<1>(clus));
+  //   }
+  // }
+
+  
+  //// print with the rof
+  for (auto it: mapLab_setClusROF){
+    if (it.second.size()==1) continue;
+    LOGP(info, "Label: Track ID: {}, Event ID: {}, Source ID: {}, Count: {}",
+        it.first.getTrackID(),
+        it.first.getEventID(),
+        it.first.getSourceID(),
+        it.second.size());
+    for (auto clusrof: it.second){
+      LOGP(info, "Chip_ROF: {}", clusrof);
+    }
+  }
+
+  
+  //// print without the rof
+  LOGP(info, "Only cluster repeated in different chips:\n");
+  for (auto it: mapLab_setClus){
+    if (it.second.size()==1) continue;
+    LOGP(info, "Label: Track ID: {}, Event ID: {}, Source ID: {}, Count: {}",
+        it.first.getTrackID(),
+        it.first.getEventID(),
+        it.first.getSourceID(),
+        it.second.size());
+
+    for (auto id: it.second){
+      LOGP(info, "chipID: {}", id);
+    }
+  }
+
+
+} // end loop on layers
+
+// LOGP(info, "** Found {} mTracksMCLabels  :",mTracksMCLabels.size());
+
+// LOGP(info, "** Found {} mClustersMCLCont  :",mClustersMCLCont->getIndexedSize());
+// LOGP(info, "** Found {} mInputITSidxs  :",mInputITSidxs.size());
+
 }
 
 void EfficiencyStudy::updateTimeDependentParams(ProcessingContext& pc)
