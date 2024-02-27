@@ -56,7 +56,7 @@ class EfficiencyStudy : public Task
                   mask_t src,
                   bool useMC,
                   std::shared_ptr<o2::steer::MCKinematicsReader> kineReader,
-                  std::shared_ptr<o2::base::GRPGeomRequest> gr) : mDataRequest(dr), mTracksSrc(src), mKineReader(kineReader), mGGCCDBRequest(gr){};
+                  std::shared_ptr<o2::base::GRPGeomRequest> gr) : mDataRequest(dr), mTracksSrc(src), mUseMC(useMC), mKineReader(kineReader), mGGCCDBRequest(gr){};
 
   ~EfficiencyStudy() final = default;
   void init(InitContext&) final;
@@ -64,12 +64,14 @@ class EfficiencyStudy : public Task
   void endOfStream(EndOfStreamContext&) final;
   void finaliseCCDB(ConcreteDataMatcher&, void*) final;
   void initialiseRun(o2::globaltracking::RecoContainer&);
+  void getDCAClusterTrackMC();
   void process(o2::globaltracking::RecoContainer&);
   void setClusterDictionary(const o2::itsmft::TopologyDictionary* d) { mDict = d; }
 
  private:
   void updateTimeDependentParams(ProcessingContext& pc);
   bool mVerboseOutput = false;
+  bool mUseMC;
   std::string mOutFileName;
   double b;
   std::shared_ptr<o2::steer::MCKinematicsReader> mKineReader;
@@ -102,22 +104,12 @@ class EfficiencyStudy : public Task
   std::unique_ptr<TH1D> mDistanceClustersY;
   std::unique_ptr<TH1D> mDistanceClustersZ;
   std::unique_ptr<TH1D> mDistanceClusters;  
-  // Distance betweeen track and original cluster, method 1
-  // std::unique_ptr<TH1D> mDCAxOriginalMethod1;
-  // std::unique_ptr<TH1D> mDCAyOriginalMethod1;
-  // std::unique_ptr<TH1D> mDCAzOriginalMethod1;
-  // std::unique_ptr<TH1D> mDCAOriginalMethod1;
-  // Distance betweeen track and duplicated cluster, method 1
-  // std::unique_ptr<TH1D> mDCAxDuplicatedMethod1;
-  // std::unique_ptr<TH1D> mDCAyDuplicatedMethod1;
-  // std::unique_ptr<TH1D> mDCAzDuplicatedMethod1;
-  // std::unique_ptr<TH1D> mDCADuplicatedMethod1;
-  // DCA betweeen track and original cluster, method 2
-  std::unique_ptr<TH1D> mDCAxyOriginalMethod2;
-  std::unique_ptr<TH1D> mDCAzOriginalMethod2;
-  // DCA betweeen track and duplicated cluster, method 2
-  std::unique_ptr<TH1D> mDCAxyDuplicatedMethod2;
-  std::unique_ptr<TH1D> mDCAzDuplicatedMethod2;
+  // DCA betweeen track and original cluster
+  std::unique_ptr<TH1D> mDCAxyOriginal;
+  std::unique_ptr<TH1D> mDCAzOriginal;
+  // DCA betweeen track and duplicated cluster
+  std::unique_ptr<TH1D> mDCAxyDuplicated;
+  std::unique_ptr<TH1D> mDCAzDuplicated;
   // phi of the cluster
   std::unique_ptr<TH1D> mPhi;
   // position of the clusters
@@ -140,19 +132,10 @@ void EfficiencyStudy::init(InitContext& ic)
   mDistanceClustersZ = std::make_unique<TH1D>("distanceClustersZ", ";Distance z (cm); ", 100, 0, 1);
   mDistanceClusters = std::make_unique<TH1D>("distanceClusters", ";Distance (cm); ", 100, 0, 1);
 
-  // mDCAxOriginalMethod1 = std::make_unique<TH1D>("dcaXOriginalMethod1", "Method 1: distance between track and original cluster ;DCA x (cm); ", 100, -0.05, 0.05);
-  // mDCAyOriginalMethod1 = std::make_unique<TH1D>("dcaYOriginalMethod1", "Method 1: distance between track and original cluster ;DCA y (cm); ", 100, -0.05, 0.05);
-  // mDCAzOriginalMethod1 = std::make_unique<TH1D>("dcaZOriginalMethod1", "Method 1: distance between track and original cluster ;DCA z (cm); ", 100, -0.05, 0.05);
-  // mDCAOriginalMethod1 = std::make_unique<TH1D>("dcaOriginalMethod1", "Method 1: distance between track and original cluster ;DCA (cm); ",  100, -0.05, 0.05);
-  // mDCAxDuplicatedMethod1 = std::make_unique<TH1D>("dcaXDuplicatedMethod1", "Method 1: distance between track and duplicated cluster  ;DCA x (cm); ",  100, -0.05, 0.05);
-  // mDCAyDuplicatedMethod1 = std::make_unique<TH1D>("dcaYDuplicatedMethod1", "Method 1: distance between track and duplicated cluster  ;DCA y (cm); ",  100, -0.05, 0.05);
-  // mDCAzDuplicatedMethod1 = std::make_unique<TH1D>("dcaZDuplicatedMethod1", "Method 1: distance between track and duplicated cluster  ;DCA z (cm); ",  100, -0.05, 0.05);
-  // mDCADuplicatedMethod1 = std::make_unique<TH1D>("dcaDuplicatedMethod1", "Method 1: distance between track and duplicated cluster  ;DCA (cm); ",  100, -0.05, 0.05);
-
-  mDCAxyOriginalMethod2 = std::make_unique<TH1D>("dcaXYOriginalMethod2", "Method 1: distance between track and original cluster ;DCA xy (cm); ", 100, -0.05, 0.05);
-  mDCAzOriginalMethod2 = std::make_unique<TH1D>("dcaZOriginalMethod2", "Method 1: distance between track and original cluster ;DCA z (cm); ", 100, -0.05, 0.05);
-  mDCAxyDuplicatedMethod2 = std::make_unique<TH1D>("dcaXYDuplicatedMethod2", "Method 1: distance between track and duplicated cluster  ;DCA xy (cm); ", 100, -0.05, 0.05);
-  mDCAzDuplicatedMethod2 = std::make_unique<TH1D>("dcaZDuplicatedMethod2", "Method 1: distance between track and duplicated cluster  ;DCA z (cm); ", 100, -0.05, 0.05);
+  mDCAxyOriginal = std::make_unique<TH1D>("dcaXYOriginal", "Distance between track and original cluster ;DCA xy (cm); ", 100, -0.05, 0.05);
+  mDCAzOriginal = std::make_unique<TH1D>("dcaZOriginal", "Distance between track and original cluster ;DCA z (cm); ", 100, -0.05, 0.05);
+  mDCAxyDuplicated = std::make_unique<TH1D>("dcaXYDuplicated", "Distance between track and duplicated cluster  ;DCA xy (cm); ", 100, -0.05, 0.05);
+  mDCAzDuplicated = std::make_unique<TH1D>("dcaZDuplicated", "Distance between track and duplicated cluster  ;DCA z (cm); ", 100, -0.05, 0.05);
 
   mPhi = std::make_unique<TH1D>("phi", ";phi (deg); ", 120, -180, 180);
 
@@ -174,12 +157,16 @@ void EfficiencyStudy::run(ProcessingContext& pc)
 void EfficiencyStudy::initialiseRun(o2::globaltracking::RecoContainer& recoData)
 {
   LOGP(info, "--------------- initialiseRun");
+  if (mUseMC){
+    mTracksMCLabels = recoData.getITSTracksMCLabels();
+    mClustersMCLCont = recoData.getITSClustersMCLabels();
+  }
+
   mTracksROFRecords = recoData.getITSTracksROFRecords();
   mTracks = recoData.getITSTracks();
-  mTracksMCLabels = recoData.getITSTracksMCLabels();
+  
   mClusters = recoData.getITSClusters();
   mClustersROFRecords = recoData.getITSClustersROFRecords();
-  mClustersMCLCont = recoData.getITSClustersMCLabels();
   mClusPatterns = recoData.getITSClustersPatterns();
   mInputITSidxs = recoData.getITSTracksClusterRefs();
   mITSClustersArray.reserve(mClusters.size());
@@ -187,39 +174,25 @@ void EfficiencyStudy::initialiseRun(o2::globaltracking::RecoContainer& recoData)
   o2::its::ioutils::convertCompactClusters(mClusters, pattIt, mITSClustersArray, mDict);  // clusters converted to 3D spacepoints
 }
 
-void EfficiencyStudy::process(o2::globaltracking::RecoContainer& recoData)
+void EfficiencyStudy::getDCAClusterTrackMC()
 {
-  mOutFile = std::make_unique<TFile>(mOutFileName.c_str(), "recreate");
+  //get the DCA between the clusters and the track from MC and fill histograms: distance between original and duplicated cluster, DCA, phi, clusters 
+  LOGP(info, "--------------- getDCAClusterTrackMC");
+  
   mOutFile->mkdir("DistanceClusters/");
-  mOutFile->mkdir("Method 1/");
-  mOutFile->mkdir("Method 2/");
-
+  mOutFile->mkdir("DCA/");
+   
   o2::base::Propagator::MatCorrType matCorr = o2::base::Propagator::MatCorrType::USEMatCorrLUT;
-  o2::itsmft::ClusterPattern patt;
-  o2::itsmft::ClusterPattern pattoriginal;
-  o2::itsmft::ClusterPattern pattduplicated;
-  auto pattIt = mClusPatterns.begin();
-  auto pattItoriginal = mClusPatterns.begin();
-  auto pattItduplicated = mClusPatterns.begin();
   o2::gpu::gpustd::array<float, 2> clusOriginalDCA, clusDuplicatedDCA;
 
-  ////starting from tracks
-  LOGP(info, "--------------- process");
-
-  LOGP(info, "** Found in {} rofs:\n\t- {} clusters\n\t",
-       mClustersROFRecords.size(), mClusters.size());
-
-  LOGP(info, "mClusters size: {}, mClustersROFRecords size: {}, mClustersMCLCont size: {}, mClustersconverted size: {} ", mClusters.size(), mClustersROFRecords.size(), mClustersMCLCont->getNElements(), mITSClustersArray.size());
-  LOGP(info, "mTracks size: {}, mTracksROFRecords size: {}, mTracksMCLabels size: {}", mTracks.size(), mTracksROFRecords.size(), mTracksMCLabels.size());
 
   short unsigned int nLayers = 3;
   unsigned int rofIndexTrack = 0;
   unsigned int rofNEntriesTrack = 0;
   unsigned int rofIndexClus = 0;
   unsigned int rofNEntriesClus = 0;
-  unsigned int totalRofEntries = 0;
   int nLabels = 0;
-  unsigned int totPrecClus = 0;
+  unsigned int totClus = 0;
 
   std::unordered_map<o2::MCCompLabel, std::vector<int>> label_vecClus[mClustersROFRecords.size()][nLayers]; // array of maps nRofs x Nlayers -> {label, vec(iClus)} where vec(iClus) are the clusters that share the same label
 
@@ -290,38 +263,19 @@ void EfficiencyStudy::process(o2::globaltracking::RecoContainer& recoData)
                     mDistanceClustersZ->Fill(abs(clusOriginalPointGlob.z() - clusDuplicatedPointGlob.z()));
                     mDistanceClusters->Fill(std::hypot(clusOriginalPointGlob.x() - clusDuplicatedPointGlob.x(), clusOriginalPointGlob.y() - clusDuplicatedPointGlob.y(), clusOriginalPointGlob.z() - clusDuplicatedPointGlob.z()));
 
-                    /// method 1 //////////////   -> propagate the track to the cluster and manually compute the distance between the track and the cluster
-                    /// first propagate to the original cluster
-                    // track.rotate(mGeometry->getSensorRefAlpha(clusOriginal.getSensorID()));
-                    // if (track.propagateTo(clusOriginalPointTrack.x(), b)){
-                    //   mDCAxOriginalMethod1->Fill(abs(clusOriginalPointTrack.x() - track.getX()));
-                    //   mDCAyOriginalMethod1->Fill(abs(clusOriginalPointTrack.y() - track.getY()));
-                    //   mDCAzOriginalMethod1->Fill(abs(clusOriginalPointTrack.z() - track.getZ()));
-                    //   mDCAOriginalMethod1->Fill(std::hypot(clusOriginalPointTrack.x() - track.getX(), clusOriginalPointTrack.y() - track.getY(), clusOriginalPointTrack.z() - track.getZ()));
-                    // }
-                    // // then propagate to the duplicated cluster
-                    // track.rotate(mGeometry->getSensorRefAlpha(clusDuplicated.getSensorID()));
-                    // if (track.propagateTo(clusDuplicatedPointTrack.x(), b)){
-                    //   mDCAxDuplicatedMethod1->Fill(abs(clusDuplicatedPointTrack.x() - track.getX()));
-                    //   mDCAyDuplicatedMethod1->Fill(abs(clusDuplicatedPointTrack.y() - track.getY()));
-                    //   mDCAzDuplicatedMethod1->Fill(abs(clusDuplicatedPointTrack.z() - track.getZ()));
-                    //   mDCADuplicatedMethod1->Fill(std::hypot(clusDuplicatedPointTrack.x() - track.getX(), clusDuplicatedPointTrack.y() - track.getY(), clusDuplicatedPointTrack.z() - track.getZ()));
-                    // }
-                    ///////////////////////////////////////////////////////
-
-                    /// method 2 ///////////////// -> returns directly the DCA between the cluster location and the track
+                    /// Compute the DCA between the cluster location and the track
                     auto propagator = o2::base::Propagator::Instance();
                     /// first propagate to the original cluster
                     trackParCov.rotate(mGeometry->getSensorRefAlpha(clusOriginal.getSensorID()));
                     if (propagator->propagateToDCA(clusOriginalPointGlob, trackParCov, b, 2.f, matCorr, &clusOriginalDCA)) {
-                      mDCAxyOriginalMethod2->Fill(clusOriginalDCA[0]);
-                      mDCAzOriginalMethod2->Fill(clusOriginalDCA[1]);
+                      mDCAxyOriginal->Fill(clusOriginalDCA[0]);
+                      mDCAzOriginal->Fill(clusOriginalDCA[1]);
                     }
                     /// then propagate to the duplicated cluster
                     trackParCov.rotate(mGeometry->getSensorRefAlpha(clusDuplicated.getSensorID()));
                     if (propagator->propagateToDCA(clusDuplicatedPointGlob, trackParCov, b, 2.f, matCorr, &clusDuplicatedDCA)) {
-                      mDCAxyDuplicatedMethod2->Fill(clusDuplicatedDCA[0]);
-                      mDCAzDuplicatedMethod2->Fill(clusDuplicatedDCA[1]);
+                      mDCAxyDuplicated->Fill(clusDuplicatedDCA[0]);
+                      mDCAzDuplicated->Fill(clusDuplicatedDCA[1]);
                     }
                     ///////////////////////////////////////////////////////
                   }
@@ -331,9 +285,11 @@ void EfficiencyStudy::process(o2::globaltracking::RecoContainer& recoData)
           }
         }
       } // end loop on clusters
-      totPrecClus += ncl;
+      totClus += ncl;
     } // end loop on tracks per ROF
   }   // end loop on ROFRecords array
+  LOGP(info, "Total number of clusters: {} ", totClus);
+  LOGP(info, "total nLabels: {}", nLabels);
 
   mPhi->Write();
   m3DClusterPositions->Write();
@@ -345,27 +301,13 @@ void EfficiencyStudy::process(o2::globaltracking::RecoContainer& recoData)
   mDistanceClustersZ->Write();
   mDistanceClusters->Write();
 
-  // mOutFile->cd("Method 1");
-  // mDCAxOriginalMethod1->Write();
-  // mDCAyOriginalMethod1->Write();
-  // mDCAzOriginalMethod1->Write();
-  // mDCAOriginalMethod1->Write();
-  // mDCAxDuplicatedMethod1->Write();
-  // mDCAyDuplicatedMethod1->Write();
-  // mDCAzDuplicatedMethod1->Write();
-  // mDCADuplicatedMethod1->Write();
+  mOutFile->cd("DCA");
+  mDCAxyOriginal->Write();
+  mDCAzOriginal->Write();
+  mDCAxyDuplicated->Write();
+  mDCAzDuplicated->Write();
 
-  mOutFile->cd("Method 2");
-  mDCAxyOriginalMethod2->Write();
-  mDCAzOriginalMethod2->Write();
-  mDCAxyDuplicatedMethod2->Write();
-  mDCAzDuplicatedMethod2->Write();
-
-  LOGP(info, "Total number of clusters: {} ", totPrecClus);
-  LOGP(info, "total rof entries: {}", totalRofEntries);
-  LOGP(info, "total nLabels: {}", nLabels);
-
-  if (mVerboseOutput){
+  if (mVerboseOutput && mUseMC){
   // printing the duplicates
     for (unsigned int iROF = 0; iROF < mClustersROFRecords.size(); iROF++) {
       LOGP(info, "°°°°°°°°°°°°°°°°°°°°°°°° ROF {} °°°°°°°°°°°°°°°°°°°°°°°°", iROF);
@@ -392,6 +334,31 @@ void EfficiencyStudy::process(o2::globaltracking::RecoContainer& recoData)
       }
     }
   }
+}
+
+
+void EfficiencyStudy::process(o2::globaltracking::RecoContainer& recoData)
+{
+  LOGP(info, "--------------- process");
+  
+
+  mOutFile = std::make_unique<TFile>(mOutFileName.c_str(), "recreate");
+
+  if (mUseMC) {
+    getDCAClusterTrackMC();
+  }
+
+  LOGP(info, "** Found in {} rofs:\n\t- {} clusters\n\t",
+       mClustersROFRecords.size(), mClusters.size());
+
+  if (mUseMC) {
+    LOGP(info, "mClusters size: {}, mClustersROFRecords size: {}, mClustersMCLCont size: {}, mClustersconverted size: {} ", mClusters.size(), mClustersROFRecords.size(), mClustersMCLCont->getNElements(), mITSClustersArray.size());
+    LOGP(info, "mTracks size: {}, mTracksROFRecords size: {}, mTracksMCLabels size: {}", mTracks.size(), mTracksROFRecords.size(), mTracksMCLabels.size());
+  } else {
+    LOGP(info, "mClusters size: {}, mClustersROFRecords size: {}, mClustersconverted size: {} ", mClusters.size(), mClustersROFRecords.size(), mITSClustersArray.size());
+    LOGP(info, "mTracks size: {}, mTracksROFRecords size: {}", mTracks.size(), mTracksROFRecords.size());
+  }
+
 }
 
 void EfficiencyStudy::updateTimeDependentParams(ProcessingContext& pc)
