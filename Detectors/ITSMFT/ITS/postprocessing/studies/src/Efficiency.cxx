@@ -145,23 +145,7 @@ class EfficiencyStudy : public Task
   std::unique_ptr<TH1D> mPhiDupl[3];
   TH2D * mPt_EtaDupl[3];
 
-  // cluster matches per layer
-  TH2D * mGoodClusterMatchesVsPt_Eta[3];
-  TH2D * mFakeClusterMatchesVsPt_Eta[3];
-  std::unique_ptr<TH1D> mGoodClusterMatchesVsPhi[3];
-  std::unique_ptr<TH1D> mFakeClusterMatchesVsPhi[3];
-
-  //2D efficiency plots 
-  TH2D * mEfficiencyGoodMatchesVsPt_Eta[3];
-  TH2D * mEfficiencyFakeMatchesVsPt_Eta[3];
-  TH2D* mEfficiencyTotalMatchesVsPt_Eta[3];
-
-  //test
-  // TH1D* num[3];
-  // TH1D* den[3];
-
   // duplicated per layer and per cut
-  // std::unique_ptr<TH1D> mDuplicatedPt[3];
   std::unique_ptr<TH1D> mDuplicatedEtaAllPt[3];
   std::unique_ptr<TH1D> mDuplicatedEta[3][3];
   std::unique_ptr<TH1D> mDuplicatedPhi[3];
@@ -175,9 +159,6 @@ class EfficiencyStudy : public Task
   std::unique_ptr<TH1D> mNFakeMatchesEtaAllPt[3];
   std::unique_ptr<TH1D> mNFakeMatchesEta[3][3];
   std::unique_ptr<TH1D> mNFakeMatchesPhi[3];
-
-  std::unique_ptr<TH1D> mNTotalMatchesEta[3];
-  std::unique_ptr<TH1D> mNTotalMatchesPhi[3];
   
   TH1D* mNGoodMatchesPt[3];
   TH1D* mNFakeMatchesPt[3];
@@ -255,21 +236,11 @@ void EfficiencyStudy::init(InitContext& ic)
     mDuplicatedEtaAllPt[i] = std::make_unique<TH1D>(Form("mDuplicatedEtaAllPt_L%d",i), Form("; #eta; Number of duplciated clusters L%d",i), 40, -2, 2);
     mNGoodMatchesEtaAllPt[i] = std::make_unique<TH1D>(Form("mNGoodMatchesEtaAllPt_L%d",i), Form("; #eta; Number of good matches L%d",i), 40, -2, 2);
     mNFakeMatchesEtaAllPt[i] = std::make_unique<TH1D>(Form("mNFakeMatchesEtaAllPt_L%d",i), Form("; #eta; Number of fake matches L%d",i), 40, -2, 2);
-    mNTotalMatchesEta[i] = std::make_unique<TH1D>(Form("mNTotalMatchesEtaAllPt_L%d",i), Form("; #eta; Number of total matches L%d",i), 40, -2, 2);
 
     mDuplicatedPhi[i] = std::make_unique<TH1D>(Form("mDuplicatedPhi_L%d",i), Form("; #phi; Number of duplciated clusters L%d",i), 120, 0, 360);
     mNGoodMatchesPhi[i] = std::make_unique<TH1D>(Form("mNGoodMatchesPhi_L%d",i), Form("; #phi; Number of good matches L%d",i), 120, 0, 360);
     mNFakeMatchesPhi[i] = std::make_unique<TH1D>(Form("mNFakeMatchesPhi_L%d",i), Form("; #phi; Number of fake matches L%d",i), 120, 0, 360);
-    mNTotalMatchesPhi[i] = std::make_unique<TH1D>(Form("mNTotalMatchesPhi_L%d",i), Form("; #phi; Number of total matches L%d",i), 120, 0, 360);
   
-    mGoodClusterMatchesVsPt_Eta[i] = new TH2D(Form("mGoodClusterMatchesVsPt_Eta_L%d",i), ";#it{p}_{T} (GeV/c);#eta;Good Duplicate Cluster;", 100, 0, 10,100, -2, 2);
-    mFakeClusterMatchesVsPt_Eta[i] = new TH2D(Form("mFakeClusterMatchesVsPt_Eta_L%d",i), ";#it{p}_{T} (GeV/c);#eta;Fake Duplicate Cluster;", 100, 0, 10,100, -2, 2);
-    mGoodClusterMatchesVsPhi[i] = std::make_unique<TH1D>(Form("mGoodClusterMatchesVsPhi_L%d",i), ";#phi (rad);Good Duplicate Cluster", 360,0,0);
-    mFakeClusterMatchesVsPhi[i] = std::make_unique<TH1D>(Form("mFakeClusterMatchesVsPhi_L%d",i), ";#phi (rad);Fake Duplicate Cluster", 360,0,0);
- 
-    mEfficiencyGoodMatchesVsPt_Eta[i] = new TH2D(Form("mEfficiencyGoodMatchesVsPt_Eta_L%d",i), ";#it{p}_{T} (GeV/c);#eta;Efficiency;", 100, 0, 10,100, -2, 2);
-    mEfficiencyFakeMatchesVsPt_Eta[i] = new TH2D(Form("mEfficiencyFakeMatchesVsPt_Eta_L%d",i), ";#it{p}_{T} (GeV/c);#eta;Efficiency;", 100, 0, 10,100, -2, 2);
-    mEfficiencyTotalMatchesVsPt_Eta[i] =new TH2D(Form("mEfficiencyTotalMatchesVsPt_Eta_L%d",i), ";#it{p}_{T} (GeV/c);#eta;Efficiency;", 100, 0, 10,100, -2, 2);
 
     for (int j=0; j<3; j++){
       mDuplicatedEta[i][j] = std::make_unique<TH1D>(Form("mDuplicatedEta_L%d_pt%d",i,j), Form("; #eta; Number of duplciated clusters L%d, %f < #it{p}_{T} < %f GeV/c",i, mrangesPt[j][0], mrangesPt[j][1]), 40, -2, 2);
@@ -866,16 +837,10 @@ void EfficiencyStudy::studyClusterSelectionMC()
         if (!adjacentFound)
           continue;
 
-        mNTotalMatchesEta[layerOriginal]->Fill(eta);
-        mNTotalMatchesPhi[layerOriginal]->Fill(phi);
-
         bool isGood = false;
         for (auto lab : std::get<2>(clusID_rDCA_label)) {
           if (lab == tracklab) {
             isGood = true;
-            mGoodClusterMatchesVsPt_Eta[layerOriginal]->Fill(pt,eta);
-            mGoodClusterMatchesVsPhi[layerOriginal]->Fill(phi);
-
             mNGoodMatchesPt[layerOriginal]->Fill(pt);
             mNGoodMatchesEtaAllPt[layerOriginal]->Fill(eta);
             for (int ipt = 0; ipt < 3; ipt++){
@@ -888,8 +853,6 @@ void EfficiencyStudy::studyClusterSelectionMC()
           }
         }
         if (!isGood) {
-          mFakeClusterMatchesVsPt_Eta[layerOriginal]->Fill(pt,eta);
-          mFakeClusterMatchesVsPhi[layerOriginal]->Fill(phi);
 
           mNFakeMatchesPt[layerOriginal]->Fill(pt);
           mNFakeMatchesEtaAllPt[layerOriginal]->Fill(eta);
@@ -1040,27 +1003,6 @@ void EfficiencyStudy::studyClusterSelectionMC()
     effPhi[l]->Write();
 
   }
-
-  mOutFile->mkdir("EfficiencyWithin10sigma/");
-  mOutFile->cd("EfficiencyWithin10sigma/");
-
-  for (int i=0; i<mNLayers; i++){
-    mGoodClusterMatchesVsPt_Eta[i]->Write();
-    mFakeClusterMatchesVsPt_Eta[i]->Write();
-    mGoodClusterMatchesVsPhi[i]->Write();
-    mFakeClusterMatchesVsPhi[i]->Write();
-
-    mEfficiencyGoodMatchesVsPt_Eta[i] = mGoodClusterMatchesVsPt_Eta[i];
-    mEfficiencyGoodMatchesVsPt_Eta[i]->Divide(mPt_EtaDupl[i]);
-    mEfficiencyGoodMatchesVsPt_Eta[i]->SetName(Form("mEfficiencyGoodMatchesVsPt_Eta_L%d",i));
-
-    mEfficiencyFakeMatchesVsPt_Eta[i] = mFakeClusterMatchesVsPt_Eta[i];
-    mEfficiencyFakeMatchesVsPt_Eta[i]->Divide(mPt_EtaDupl[i]);
-    mEfficiencyFakeMatchesVsPt_Eta[i]->SetName(Form("mEfficiencyFakeMatchesVsPt_Eta_L%d",i));
-    
-    mEfficiencyGoodMatchesVsPt_Eta[i]->Write();
-  }
-
 }
 
 void EfficiencyStudy::process(o2::globaltracking::RecoContainer& recoData)
