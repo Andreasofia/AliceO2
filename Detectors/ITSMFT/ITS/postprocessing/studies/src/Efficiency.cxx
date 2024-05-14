@@ -106,28 +106,33 @@ class EfficiencyStudy : public Task
   // Utils
   std::shared_ptr<o2::base::GRPGeomRequest> mGGCCDBRequest;
   std::unique_ptr<TFile> mOutFile;
+  int mDuplicated_layer[3] = {0};
 
   //// Histos
   // Distance betweeen original and duplicated clusters
-  std::unique_ptr<TH1D> mDistanceClustersX;
-  std::unique_ptr<TH1D> mDistanceClustersY;
-  std::unique_ptr<TH1D> mDistanceClustersZ;
-  std::unique_ptr<TH1D> mDistanceClusters;
+  std::unique_ptr<TH1D> mDistanceClustersX[3];
+  std::unique_ptr<TH1D> mDistanceClustersY[3];
+  std::unique_ptr<TH1D> mDistanceClustersZ[3];
+  std::unique_ptr<TH1D> mDistanceClusters[3];
   // DCA betweeen track and original cluster
-  std::unique_ptr<TH1D> mDCAxyOriginal;
-  std::unique_ptr<TH1D> mDCAzOriginal;
+  std::unique_ptr<TH1D> mDCAxyOriginal[3];
+  std::unique_ptr<TH1D> mDCAzOriginal[3];
   // DCA betweeen track and duplicated cluster
   std::unique_ptr<TH1D> mDCAxyDuplicated;
   std::unique_ptr<TH1D> mDCAzDuplicated;
 
+  // DCA betweeen track and duplicated cluster per layer
+  std::unique_ptr<TH1D> mDCAxyDuplicated_layer[3];
+  std::unique_ptr<TH1D> mDCAzDuplicated_layer[3];
+
   // phi, eta, pt of the cluster
-  std::unique_ptr<TH1D> mPhiOriginal;
+  std::unique_ptr<TH1D> mPhiOriginal[3];
   std::unique_ptr<TH1D> mPhiOriginalLayer[3];
-  std::unique_ptr<TH1D> mEtaOriginal;
-  std::unique_ptr<TH1D> mPtOriginal;
-  std::unique_ptr<TH1D> mPhiDuplicated;
-  std::unique_ptr<TH1D> mEtaDuplicated;
-  std::unique_ptr<TH1D> mPtDuplicated;
+  std::unique_ptr<TH1D> mEtaOriginal[3];
+  std::unique_ptr<TH1D> mPtOriginal[3];
+  std::unique_ptr<TH1D> mPhiDuplicated[3];
+  std::unique_ptr<TH1D> mEtaDuplicated[3];
+  std::unique_ptr<TH1D> mPtDuplicated[3];
 
   // position of the clusters
   std::unique_ptr<TH3D> m3DClusterPositions;
@@ -138,6 +143,9 @@ class EfficiencyStudy : public Task
   std::unique_ptr<TH1D> mEfficiencyGoodMatch;
   std::unique_ptr<TH1D> mEfficiencyFakeMatch;
   std::unique_ptr<TH1D> mEfficiencyTotal;
+  std::unique_ptr<TH1D> mEfficiencyGoodMatch_layer[3];
+  std::unique_ptr<TH1D> mEfficiencyFakeMatch_layer[3];
+  std::unique_ptr<TH1D> mEfficiencyTotal_layer[3];
 
   // phi, eta, pt of the duplicated cluster per layer
   std::unique_ptr<TH1D> mPtDupl[3];
@@ -192,23 +200,8 @@ void EfficiencyStudy::init(InitContext& ic)
   for (int i = 0; i <= nbPt; i++)
     xbins[i] = ptcutl * std::exp(i * a);
 
-  mDistanceClustersX = std::make_unique<TH1D>("distanceClustersX", ";Distance x (cm); ", 100, 0, 1);
-  mDistanceClustersY = std::make_unique<TH1D>("distanceClustersY", ";Distance y (cm); ", 100, 0, 1);
-  mDistanceClustersZ = std::make_unique<TH1D>("distanceClustersZ", ";Distance z (cm); ", 100, 0, 1);
-  mDistanceClusters = std::make_unique<TH1D>("distanceClusters", ";Distance (cm); ", 100, 0, 1);
-
-  mDCAxyOriginal = std::make_unique<TH1D>("dcaXYOriginal", "Distance between track and original cluster ;DCA xy (cm); ", 100, -0.05, 0.05);
-  mDCAzOriginal = std::make_unique<TH1D>("dcaZOriginal", "Distance between track and original cluster ;DCA z (cm); ", 100, -0.05, 0.05);
-  mDCAxyDuplicated = std::make_unique<TH1D>("dcaXYDuplicated", "Distance between track and duplicated cluster  ;DCA xy (cm); ", 100, -0.05, 0.05);
-  mDCAzDuplicated = std::make_unique<TH1D>("dcaZDuplicated", "Distance between track and duplicated cluster  ;DCA z (cm); ", 100, -0.05, 0.05);
-
-  mPhiOriginal = std::make_unique<TH1D>("phiOriginal", ";phi (deg); ", 120, 0, 360);
-  mEtaOriginal = std::make_unique<TH1D>("etaOriginal", ";eta (deg); ", 100, -2, 2);
-  mPtOriginal = std::make_unique<TH1D>("ptOriginal", ";pt (GeV); ", 100, 0, 10);
-
-  mPhiDuplicated = std::make_unique<TH1D>("phiDuplicated", ";phi (deg); ", 120, 0, 360);
-  mEtaDuplicated = std::make_unique<TH1D>("etaDuplicated", ";eta (deg); ", 100, -2, 2);
-  mPtDuplicated = std::make_unique<TH1D>("ptDuplicated", ";pt (GeV); ", 100, 0, 10);
+  mDCAxyDuplicated = std::make_unique<TH1D>("dcaXYDuplicated", "Distance between track and duplicated cluster  ;DCA xy (cm); ", 400, -0.2, 0.2);
+  mDCAzDuplicated = std::make_unique<TH1D>("dcaZDuplicated", "Distance between track and duplicated cluster  ;DCA z (cm); ", 400, -0.2, 0.2);
 
   m3DClusterPositions = std::make_unique<TH3D>("3DClusterPositions", ";x (cm);y (cm);z (cm)", 200, -10, 10, 200, -10, 10, 400, -20, 20);
   m2DClusterOriginalPositions = std::make_unique<TH2D>("m2DClusterOriginalPositions", ";x (cm);y (cm)", 400, -10, 10, 400, -6, 6);
@@ -218,8 +211,32 @@ void EfficiencyStudy::init(InitContext& ic)
   mEfficiencyFakeMatch = std::make_unique<TH1D>("mEfficiencyFakeMatch", ";#sigma(DCA) cut;Efficiency;", 20, 0.5, 20.5);
   mEfficiencyTotal = std::make_unique<TH1D>("mEfficiencyTotal", ";#sigma(DCA) cut;Efficiency;", 20, 0.5, 20.5);
   
-  
   for (int i=0; i<mNLayers; i++) {
+
+    mDistanceClustersX[i] = std::make_unique<TH1D>(Form("distanceClustersX_L%d",i), ";Distance x (cm); ", 100, 0, 1);
+    mDistanceClustersY[i] = std::make_unique<TH1D>(Form("distanceClustersY_L%d",i), ";Distance y (cm); ", 100, 0, 1);
+    mDistanceClustersZ[i] = std::make_unique<TH1D>(Form("distanceClustersZ_L%d",i), ";Distance z (cm); ", 100, 0, 1);
+    mDistanceClusters[i] = std::make_unique<TH1D>(Form("distanceClusters_L%d",i), ";Distance (cm); ", 100, 0, 1);
+
+    mDCAxyOriginal[i] = std::make_unique<TH1D>(Form("dcaXYOriginal_L%d",i), "Distance between track and original cluster ;DCA xy (cm); ", 400, -0.2, 0.2);
+    mDCAzOriginal[i] = std::make_unique<TH1D>(Form("dcaZOriginal_L%d",i), "Distance between track and original cluster ;DCA z (cm); ", 400, -0.2, 0.2);
+
+
+    mPhiOriginal[i] = std::make_unique<TH1D>(Form("phiOriginal_L%d",i), ";phi (deg); ", 120, 0, 360);
+    mEtaOriginal[i] = std::make_unique<TH1D>(Form("etaOriginal_L%d",i), ";eta (deg); ", 100, -2, 2);
+    mPtOriginal[i] = std::make_unique<TH1D>(Form("ptOriginal_L%d",i), ";pt (GeV); ", 100, 0, 10);
+
+    mPhiDuplicated[i] = std::make_unique<TH1D>(Form("phiDuplicated_L%d",i), ";phi (deg); ", 120, 0, 360);
+    mEtaDuplicated[i] = std::make_unique<TH1D>(Form("etaDuplicated_L%d",i), ";eta (deg); ", 100, -2, 2);
+    mPtDuplicated[i] = std::make_unique<TH1D>(Form("ptDuplicated_L%d",i), ";pt (GeV); ", 100, 0, 10);
+
+    mDCAxyDuplicated_layer[i] = std::make_unique<TH1D>(Form("dcaXYDuplicated_layer_L%d",i), "Distance between track and duplicated cluster  ;DCA xy (cm); ", 400, -0.2, 0.2);
+    mDCAzDuplicated_layer[i] = std::make_unique<TH1D>(Form("dcaZDuplicated_layer_L%d",i), "Distance between track and duplicated cluster  ;DCA z (cm); ", 400, -0.2, 0.2);
+
+    mEfficiencyGoodMatch_layer[i] = std::make_unique<TH1D>(Form("mEfficiencyGoodMatch_layer_L%d",i), ";#sigma(DCA) cut;Efficiency;", 20, 0.5, 20.5);
+    mEfficiencyFakeMatch_layer[i] = std::make_unique<TH1D>(Form("mEfficiencyFakeMatch_layer_L%d",i), ";#sigma(DCA) cut;Efficiency;", 20, 0.5, 20.5);
+    mEfficiencyTotal_layer[i] = std::make_unique<TH1D>(Form("mEfficiencyTotal_layer_L%d",i), ";#sigma(DCA) cut;Efficiency;", 20, 0.5, 20.5);
+    
     mPhiOriginalLayer[i] = std::make_unique<TH1D>(Form("phiOriginal_L%d",i), ";phi (deg); ", 120, 0, 360);
     mPtDupl[i] = std::make_unique<TH1D>(Form("mPtDupl_L%d",i), ";#it{p}_{T} (GeV/c); ", 100, 0, 10);
     mEtaDupl[i] = std::make_unique<TH1D>(Form("mEtaDupl_L%d",i), ";#eta; ", 100, -2, 2);
@@ -349,10 +366,10 @@ int EfficiencyStudy::getDCAClusterTrackMC(int countDuplicated = 0)
         o2::math_utils::Point3D<float> clusOriginalPointTrack = {clusOriginalPoint.getX(), clusOriginalPoint.getY(), clusOriginalPoint.getZ()};
         o2::math_utils::Point3D<float> clusOriginalPointGlob = mGeometry->getMatrixT2G(clusOriginal.getSensorID()) * clusOriginalPointTrack;
 
-        mPhiOriginal->Fill(phi);
+        mPhiOriginal[layer]->Fill(phi);
         mPhiOriginalLayer[layer]->Fill(phi);
-        mPtOriginal->Fill(pt);
-        mEtaOriginal->Fill(eta);
+        mPtOriginal[layer]->Fill(pt);
+        mEtaOriginal[layer]->Fill(eta);
         m3DClusterPositions->Fill(clusOriginalPointGlob.x(), clusOriginalPointGlob.y(), clusOriginalPointGlob.z());
         m2DClusterOriginalPositions->Fill(clusOriginalPointGlob.x(), clusOriginalPointGlob.y());
       
@@ -397,8 +414,12 @@ int EfficiencyStudy::getDCAClusterTrackMC(int countDuplicated = 0)
                     continue;
 
                   duplicated++;
+                  
+                  if (countDuplicated == 0){
+                    mDuplicated_layer[layerDuplicated]++; // This has to be incremented at the first call
+                  }
 
-                  if (countDuplicated == 1){ 
+                  if (countDuplicated == 1){            
                     mDuplicatedPt[layerDuplicated]->Fill(pt);
                     // den[layerDuplicated]->Fill(pt);
                     mDuplicatedEtaAllPt[layerDuplicated]->Fill(eta);
@@ -411,9 +432,9 @@ int EfficiencyStudy::getDCAClusterTrackMC(int countDuplicated = 0)
                     mDuplicatedPhi[layerDuplicated]->Fill(phi);
                   }
 
-                  mPhiDuplicated->Fill(phi);
-                  mPtDuplicated->Fill(pt);
-                  mEtaDuplicated->Fill(eta);
+                  mPhiDuplicated[layerClus]->Fill(phi);
+                  mPtDuplicated[layerClus]->Fill(pt);
+                  mEtaDuplicated[layerClus]->Fill(eta);
 
                   mPtDupl[layerClus]->Fill(pt);
                   mEtaDupl[layerClus]->Fill(eta);
@@ -425,24 +446,26 @@ int EfficiencyStudy::getDCAClusterTrackMC(int countDuplicated = 0)
                   m2DClusterDuplicatedPositions->Fill(clusDuplicatedPointGlob.x(), clusDuplicatedPointGlob.y());
 
                   /// compute the distance between original and dubplicated cluster
-                  mDistanceClustersX->Fill(abs(clusOriginalPointGlob.x() - clusDuplicatedPointGlob.x()));
-                  mDistanceClustersY->Fill(abs(clusOriginalPointGlob.y() - clusDuplicatedPointGlob.y()));
-                  mDistanceClustersZ->Fill(abs(clusOriginalPointGlob.z() - clusDuplicatedPointGlob.z()));
-                  mDistanceClusters->Fill(std::hypot(clusOriginalPointGlob.x() - clusDuplicatedPointGlob.x(), clusOriginalPointGlob.y() - clusDuplicatedPointGlob.y(), clusOriginalPointGlob.z() - clusDuplicatedPointGlob.z()));
+                  mDistanceClustersX[layerClus]->Fill(abs(clusOriginalPointGlob.x() - clusDuplicatedPointGlob.x()));
+                  mDistanceClustersY[layerClus]->Fill(abs(clusOriginalPointGlob.y() - clusDuplicatedPointGlob.y()));
+                  mDistanceClustersZ[layerClus]->Fill(abs(clusOriginalPointGlob.z() - clusDuplicatedPointGlob.z()));
+                  mDistanceClusters[layerClus]->Fill(std::hypot(clusOriginalPointGlob.x() - clusDuplicatedPointGlob.x(), clusOriginalPointGlob.y() - clusDuplicatedPointGlob.y(), clusOriginalPointGlob.z() - clusDuplicatedPointGlob.z()));
 
                   /// Compute the DCA between the cluster location and the track
 
                   /// first propagate to the original cluster
                   trackParCov.rotate(mGeometry->getSensorRefAlpha(clusOriginal.getSensorID()));
                   if (propagator->propagateToDCA(clusOriginalPointGlob, trackParCov, b, 2.f, matCorr, &clusOriginalDCA)) {
-                    mDCAxyOriginal->Fill(clusOriginalDCA[0]);
-                    mDCAzOriginal->Fill(clusOriginalDCA[1]);
+                    mDCAxyOriginal[layerClus]->Fill(clusOriginalDCA[0]);
+                    mDCAzOriginal[layerClus]->Fill(clusOriginalDCA[1]);
                   }
                   /// then propagate to the duplicated cluster
                   trackParCov.rotate(mGeometry->getSensorRefAlpha(clusDuplicated.getSensorID()));
                   if (propagator->propagateToDCA(clusDuplicatedPointGlob, trackParCov, b, 2.f, matCorr, &clusDuplicatedDCA)) {
                     mDCAxyDuplicated->Fill(clusDuplicatedDCA[0]);
                     mDCAzDuplicated->Fill(clusDuplicatedDCA[1]);
+                    mDCAxyDuplicated_layer[layerDuplicated]->Fill(clusDuplicatedDCA[0]);
+                    mDCAzDuplicated_layer[layerDuplicated]->Fill(clusDuplicatedDCA[1]);             
                   }
                   ///////////////////////////////////////////////////////
                 }
@@ -458,32 +481,45 @@ int EfficiencyStudy::getDCAClusterTrackMC(int countDuplicated = 0)
   LOGP(info, "total nLabels: {}", nLabels);
   LOGP(info, "Number of duplicated clusters: {}", duplicated);
   if (countDuplicated == 1){
-    mPhiOriginal->Write();
-    // mPhi->Write();
-    mPhiDuplicated->Write();
     m3DClusterPositions->Write();
     m2DClusterOriginalPositions->Write();
     m2DClusterDuplicatedPositions->Write();
 
+    for (int i=0; i<mNLayers; i++) {
+      mPhiOriginal[i]->Write();
+      mPhiDuplicated[i]->Write();
+    }
+
     mOutFile->cd("DistanceClusters");
-    mDistanceClustersX->Write();
-    mDistanceClustersY->Write();
-    mDistanceClustersZ->Write();
-    mDistanceClusters->Write();
+    for (int i=0; i<mNLayers; i++) {
+
+      mDistanceClustersX[i]->Write();
+      mDistanceClustersY[i]->Write();
+      mDistanceClustersZ[i]->Write();
+      mDistanceClusters[i]->Write();
+
+    }
 
     mOutFile->cd("DCA");
-    mDCAxyOriginal->Write();
-    mDCAzOriginal->Write();
     mDCAxyDuplicated->Write();
     mDCAzDuplicated->Write();
+    for (int i=0; i<mNLayers; i++) {
+      mDCAxyDuplicated_layer[i]->Write();
+      mDCAzDuplicated_layer[i]->Write();
+
+      mDCAxyOriginal[i]->Write();
+      mDCAzOriginal[i]->Write();
+    }
 
     mOutFile->cd("Pt_Eta_Phi/");
-    mPhiOriginal->Write();
-    mPtOriginal->Write();
-    mEtaOriginal->Write();
-    mPhiDuplicated->Write();
-    mPtDuplicated->Write();
-    mEtaDuplicated->Write();
+    for (int i=0; i<mNLayers; i++) {
+      mPhiOriginal[i]->Write();
+      mPtOriginal[i]->Write();
+      mEtaOriginal[i]->Write();
+      mPhiDuplicated[i]->Write();
+      mPtDuplicated[i]->Write();
+      mEtaDuplicated[i]->Write();
+    }
 
     for (int i=0; i<mNLayers; i++) {
       mPhiOriginalLayer[i]->Write();
@@ -533,13 +569,22 @@ void EfficiencyStudy::studyDCAcutsMC()
 
   int duplicated = getDCAClusterTrackMC(0);
 
-  double meanDCAxyDuplicated = mDCAxyDuplicated->GetMean();
-  double meanDCAzDuplicated = mDCAzDuplicated->GetMean();
-  double sigmaDCAxyDuplicated = mDCAxyDuplicated->GetRMS();
-  double sigmaDCAzDuplicated = mDCAzDuplicated->GetRMS();
+  double meanDCAxyDuplicated[mNLayers] = {0};
+  double meanDCAzDuplicated[mNLayers] = {0};
+  double sigmaDCAxyDuplicated[mNLayers] = {0};
+  double sigmaDCAzDuplicated[mNLayers] = {0};
 
-  LOGP(info, "meanDCAxyDuplicated: {}, meanDCAzDuplicated: {}, sigmaDCAxyDuplicated: {}, sigmaDCAzDuplicated: {}", meanDCAxyDuplicated, meanDCAzDuplicated, sigmaDCAxyDuplicated, sigmaDCAzDuplicated);
+  for (int l=0; l<mNLayers; l++) {
+    meanDCAxyDuplicated[l] = mDCAxyDuplicated_layer[l]->GetMean();
+    meanDCAzDuplicated[l] = mDCAzDuplicated_layer[l]->GetMean();
+    sigmaDCAxyDuplicated[l] = mDCAxyDuplicated_layer[l]->GetRMS();
+    sigmaDCAzDuplicated[l] = mDCAzDuplicated_layer[l]->GetRMS();
+    
+  }
 
+  for (int l=0; l<mNLayers; l++) {
+    LOGP(info, "meanDCAxyDuplicated L{}: {}, meanDCAzDuplicated: {}, sigmaDCAxyDuplicated: {}, sigmaDCAzDuplicated: {}",l, meanDCAxyDuplicated[l], meanDCAzDuplicated[l], sigmaDCAxyDuplicated[l], sigmaDCAzDuplicated[l]);
+  }
   // now we have the DCA distribution:
   //  ->iterate again over tracks and over duplicated clusters and find the matching ones basing on DCA cuts (1 sigma, 2 sigma,...)
   //  then control if the matching ones according to the DCA matches have the same label
@@ -560,7 +605,9 @@ void EfficiencyStudy::studyDCAcutsMC()
   unsigned int nDCAMatches[20] = {0};
   unsigned int nGoodMatches[20] = {0};
   unsigned int nFakeMatches[20] = {0};
-  unsigned int nOriginalMatches = 0;
+
+  unsigned int nGoodMatches_layer[mNLayers][20] = {0};
+  unsigned int nFakeMatches_layer[mNLayers][20] = {0};
 
   for (unsigned int iROF = 0; iROF < mTracksROFRecords.size(); iROF++) { // loop on ROFRecords array
     rofIndexTrack = mTracksROFRecords[iROF].getFirstEntry();
@@ -590,7 +637,6 @@ void EfficiencyStudy::studyDCAcutsMC()
         auto layerOriginal = mGeometry->getLayer(clusOriginal.getSensorID());
         if (layerOriginal >= mNLayers)
           continue;
-        nOriginalMatches++;                                                       // checking only selected layers
         auto labsOriginal = mClustersMCLCont->getLabels(mInputITSidxs[iclTrack]); // get labels of the cluster associated to the track (original)
         auto staveOriginal = mGeometry->getStave(clusOriginal.getSensorID());
         auto chipOriginal = mGeometry->getChipIdInStave(clusOriginal.getSensorID());
@@ -636,9 +682,9 @@ void EfficiencyStudy::studyDCAcutsMC()
               for (int i = 0; i < 20; i++) {
 
                 // if (abs(meanDCAxyDuplicated - clusDuplicatedDCA[0]) < (i+1)*sigmaDCAxyDuplicated){ // check if the DCA is within the cut i*sigma
-                if (abs(meanDCAxyDuplicated - clusDuplicatedDCA[0]) < (i + 1) * sigmaDCAxyDuplicated && abs(meanDCAzDuplicated - clusDuplicatedDCA[1]) < (i + 1) * sigmaDCAzDuplicated) { // check if the DCA is within the cut i*sigma
+                if (abs(meanDCAxyDuplicated[layerDuplicated] - clusDuplicatedDCA[0]) < (i + 1) * sigmaDCAxyDuplicated[layerDuplicated] && abs(meanDCAzDuplicated[layerDuplicated] - clusDuplicatedDCA[1]) < (i + 1) * sigmaDCAzDuplicated[layerDuplicated]) { // check if the DCA is within the cut i*sigma
                   if (mVerboseOutput)
-                    LOGP(info, "Check DCA ok: {} < {}; {} < {}", abs(meanDCAxyDuplicated - clusDuplicatedDCA[0]), (i + 1) * sigmaDCAxyDuplicated, abs(meanDCAzDuplicated - clusDuplicatedDCA[1]), (i + 1) * sigmaDCAzDuplicated);
+                    LOGP(info, "Check DCA ok: {} < {}; {} < {}", abs(meanDCAxyDuplicated[layerDuplicated] - clusDuplicatedDCA[0]), (i + 1) * sigmaDCAxyDuplicated[layerDuplicated], abs(meanDCAzDuplicated[layerDuplicated] - clusDuplicatedDCA[1]), (i + 1) * sigmaDCAzDuplicated[layerDuplicated]);
                   nDCAMatches[i]++;
                   bool isGoodMatch = false;
 
@@ -653,10 +699,14 @@ void EfficiencyStudy::studyDCAcutsMC()
                       continue;
                     }
                   }
-                  if (isGoodMatch)
+                  if (isGoodMatch){
                     nGoodMatches[i]++;
-                  else
+                    nGoodMatches_layer[layerDuplicated][i]++;
+                  }
+                  else {
                     nFakeMatches[i]++;
+                    nFakeMatches_layer[layerDuplicated][i]++;
+                  }
                 } else if (mVerboseOutput)
                   LOGP(info, "Check DCA failed");
               }
@@ -673,6 +723,18 @@ void EfficiencyStudy::studyDCAcutsMC()
     mEfficiencyGoodMatch->SetBinContent(i+1, nGoodMatches[i]);
     mEfficiencyFakeMatch->SetBinContent(i+1, nFakeMatches[i]);
     mEfficiencyTotal->SetBinContent(i+1, double(nGoodMatches[i] + nFakeMatches[i]));
+
+    for (int l=0; l<mNLayers; l++){
+      mEfficiencyGoodMatch_layer[l]->SetBinContent(i+1, nGoodMatches_layer[l][i]);
+      mEfficiencyFakeMatch_layer[l]->SetBinContent(i+1, nFakeMatches_layer[l][i]);
+      mEfficiencyTotal_layer[l]->SetBinContent(i+1, double(nGoodMatches_layer[l][i] + nFakeMatches_layer[l][i]));
+    }
+  }
+
+  for (int l=0; l<mNLayers; l++){
+    mEfficiencyGoodMatch_layer[l]->Scale(1./double(mDuplicated_layer[l]), "b");
+    mEfficiencyFakeMatch_layer[l]->Scale(1./double(mDuplicated_layer[l]), "b");
+    mEfficiencyTotal_layer[l]->Scale(1./double(mDuplicated_layer[l]), "b");
   }
 
   mEfficiencyGoodMatch->Scale(1./double(duplicated), "b");
@@ -684,12 +746,22 @@ void EfficiencyStudy::studyDCAcutsMC()
   mEfficiencyGoodMatch->Write();
   mEfficiencyFakeMatch->Write();
   mEfficiencyTotal->Write();
+  for (int l=0; l<mNLayers; l++){
+    mEfficiencyGoodMatch_layer[l]->Write();
+    mEfficiencyFakeMatch_layer[l]->Write();
+    mEfficiencyTotal_layer[l]->Write();
+    
+    mEfficiencyGoodMatch_layer[l]->GetYaxis()->SetRangeUser(-0.1, 1.1);
+    mEfficiencyFakeMatch_layer[l]->GetYaxis()->SetRangeUser(-0.1, 1.1);
+    mEfficiencyTotal_layer[l]->GetYaxis()->SetRangeUser(-0.1, 1.1);
+  }
 
   mEfficiencyGoodMatch->GetYaxis()->SetRangeUser(-0.1, 1.1);
   mEfficiencyFakeMatch->GetYaxis()->SetRangeUser(-0.1, 1.1);
   mEfficiencyTotal->GetYaxis()->SetRangeUser(-0.1, 1.1);
 
   TCanvas c;
+  c.SetName("EffVsDCA_allLayers");
   auto leg = std::make_unique<TLegend>(0.75, 0.45, 0.89, 0.65);
   leg->AddEntry(mEfficiencyGoodMatch.get(), "#frac{# good matches}{# tot duplicated clusters}", "p");
   leg->AddEntry(mEfficiencyFakeMatch.get(), "#frac{# fake matches}{# tot duplicated clusters}", "p");
@@ -701,6 +773,32 @@ void EfficiencyStudy::studyDCAcutsMC()
   leg->Draw("same");
   c.Write();
   c.SaveAs("prova.png");
+
+  TCanvas cc[mNLayers];
+  for (int l=0; l<mNLayers; l++){
+    cc[l].cd();
+    cc[l].SetName(Form("EffVsDCA_layer_L%d", l));
+
+    auto leg = std::make_unique<TLegend>(0.75, 0.45, 0.89, 0.65);
+    leg->AddEntry(mEfficiencyGoodMatch_layer[l].get(), "#frac{# good matches}{# tot duplicated clusters}", "p");
+    leg->AddEntry(mEfficiencyFakeMatch_layer[l].get(), "#frac{# fake matches}{# tot duplicated clusters}", "p");
+    leg->AddEntry(mEfficiencyTotal_layer[l].get(), "#frac{# tot matches}{# tot duplicated clusters}", "p");
+    
+    mEfficiencyGoodMatch_layer[l]->SetLineColor(kBlue+3);
+    mEfficiencyGoodMatch_layer[l]->SetMarkerColor(kBlue+3);
+    mEfficiencyGoodMatch_layer[l]->Draw("P l E1_NOSTAT");
+    mEfficiencyFakeMatch_layer[l]->SetLineColor(kAzure+7);
+    mEfficiencyFakeMatch_layer[l]->SetMarkerColor(kAzure+7);
+    mEfficiencyFakeMatch_layer[l]->Draw("same P l E1_NOSTAT");
+    mEfficiencyTotal_layer[l]->SetLineColor(kGreen+1);
+    mEfficiencyTotal_layer[l]->SetMarkerColor(kGreen+1);
+    mEfficiencyTotal_layer[l]->Draw("same P l E1_NOSTAT");
+    leg->Draw("same");
+    cc[l].Write();
+    cc[l].SaveAs(Form("provaLayer%d.png", l));
+  }
+
+
 }
 
 void EfficiencyStudy::studyClusterSelectionMC()
@@ -715,12 +813,22 @@ void EfficiencyStudy::studyClusterSelectionMC()
 
   std::cout<<"duplicated: "<<duplicated<<std::endl;
 
-  double meanDCAxyDuplicated = mDCAxyDuplicated->GetMean();
-  double meanDCAzDuplicated = mDCAzDuplicated->GetMean();
-  double sigmaDCAxyDuplicated = mDCAxyDuplicated->GetRMS();
-  double sigmaDCAzDuplicated = mDCAzDuplicated->GetRMS();
-
-  LOGP(info, "meanDCAxyDuplicated: {}, meanDCAzDuplicated: {}, sigmaDCAxyDuplicated: {}, sigmaDCAzDuplicated: {}", meanDCAxyDuplicated, meanDCAzDuplicated, sigmaDCAxyDuplicated, sigmaDCAzDuplicated);
+  double meanDCAxyDuplicated[mNLayers] = {0};
+  double meanDCAzDuplicated[mNLayers] = {0};
+  double sigmaDCAxyDuplicated[mNLayers] = {0};
+  double sigmaDCAzDuplicated[mNLayers] = {0};
+  
+  for (int l=0; l<mNLayers; l++) {
+    meanDCAxyDuplicated[l] = mDCAxyDuplicated_layer[l]->GetMean();
+    meanDCAzDuplicated[l] = mDCAzDuplicated_layer[l]->GetMean();
+    sigmaDCAxyDuplicated[l] = mDCAxyDuplicated_layer[l]->GetRMS();
+    sigmaDCAzDuplicated[l] = mDCAzDuplicated_layer[l]->GetRMS();
+    
+  }
+  
+  for (int l=0; l<mNLayers; l++) {
+    LOGP(info, "meanDCAxyDuplicated L{}: {}, meanDCAzDuplicated: {}, sigmaDCAxyDuplicated: {}, sigmaDCAzDuplicated: {}",l, meanDCAxyDuplicated[l], meanDCAzDuplicated[l], sigmaDCAxyDuplicated[l], sigmaDCAzDuplicated[l]);
+  }
 
   o2::base::Propagator::MatCorrType matCorr = o2::base::Propagator::MatCorrType::USEMatCorrLUT;
   o2::gpu::gpustd::array<float, 2> clusOriginalDCA, clusDuplicatedDCA;
@@ -737,7 +845,6 @@ void EfficiencyStudy::studyClusterSelectionMC()
   unsigned int nDCAMatches[15] = {0};
   unsigned int nGoodMatches[15] = {0};
   unsigned int nFakeMatches[15] = {0};
-  unsigned int nOriginalMatches = 0;
 
   std::map<std::tuple<int, double, o2::MCCompLabel>, bool> clusterMatchesPtEta[100][100] = {};
 
@@ -816,7 +923,7 @@ void EfficiencyStudy::studyClusterSelectionMC()
           }
 
           /// Imposing that the distance between the original cluster and the duplicated one is less than x sigma
-          if (!(abs(meanDCAxyDuplicated - clusDuplicatedDCA[0]) < 5 * sigmaDCAxyDuplicated && abs(meanDCAzDuplicated - clusDuplicatedDCA[1]) < 5 * sigmaDCAzDuplicated)) {
+          if (!(abs(meanDCAxyDuplicated[layerDuplicated] - clusDuplicatedDCA[0]) < 5 * sigmaDCAxyDuplicated[layerDuplicated] && abs(meanDCAzDuplicated[layerDuplicated] - clusDuplicatedDCA[1]) < 5 * sigmaDCAzDuplicated[layerDuplicated])) {
             continue;
           }
 
