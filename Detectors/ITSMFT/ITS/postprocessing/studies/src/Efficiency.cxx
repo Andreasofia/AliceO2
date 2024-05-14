@@ -127,11 +127,8 @@ class EfficiencyStudy : public Task
 
   // phi, eta, pt of the cluster
   std::unique_ptr<TH1D> mPhiOriginal[3];
-  std::unique_ptr<TH1D> mPhiOriginalLayer[3];
   std::unique_ptr<TH1D> mEtaOriginal[3];
   std::unique_ptr<TH1D> mPtOriginal[3];
-  std::unique_ptr<TH1D> mPhiDuplicated[3];
-  std::unique_ptr<TH1D> mEtaDuplicated[3];
   std::unique_ptr<TH1D> mPtDuplicated[3];
 
   // position of the clusters
@@ -148,9 +145,6 @@ class EfficiencyStudy : public Task
   std::unique_ptr<TH1D> mEfficiencyTotal_layer[3];
 
   // phi, eta, pt of the duplicated cluster per layer
-  std::unique_ptr<TH1D> mPtDupl[3];
-  std::unique_ptr<TH1D> mEtaDupl[3];
-  std::unique_ptr<TH1D> mPhiDupl[3];
   TH2D * mPt_EtaDupl[3];
 
   // duplicated per layer and per cut
@@ -225,9 +219,7 @@ void EfficiencyStudy::init(InitContext& ic)
     mPhiOriginal[i] = std::make_unique<TH1D>(Form("phiOriginal_L%d",i), ";phi (deg); ", 120, 0, 360);
     mEtaOriginal[i] = std::make_unique<TH1D>(Form("etaOriginal_L%d",i), ";eta (deg); ", 100, -2, 2);
     mPtOriginal[i] = std::make_unique<TH1D>(Form("ptOriginal_L%d",i), ";pt (GeV); ", 100, 0, 10);
-
-    mPhiDuplicated[i] = std::make_unique<TH1D>(Form("phiDuplicated_L%d",i), ";phi (deg); ", 120, 0, 360);
-    mEtaDuplicated[i] = std::make_unique<TH1D>(Form("etaDuplicated_L%d",i), ";eta (deg); ", 100, -2, 2);
+    
     mPtDuplicated[i] = std::make_unique<TH1D>(Form("ptDuplicated_L%d",i), ";pt (GeV); ", 100, 0, 10);
 
     mDCAxyDuplicated_layer[i] = std::make_unique<TH1D>(Form("dcaXYDuplicated_layer_L%d",i), "Distance between track and duplicated cluster  ;DCA xy (cm); ", 400, -0.2, 0.2);
@@ -237,32 +229,28 @@ void EfficiencyStudy::init(InitContext& ic)
     mEfficiencyFakeMatch_layer[i] = std::make_unique<TH1D>(Form("mEfficiencyFakeMatch_layer_L%d",i), ";#sigma(DCA) cut;Efficiency;", 20, 0.5, 20.5);
     mEfficiencyTotal_layer[i] = std::make_unique<TH1D>(Form("mEfficiencyTotal_layer_L%d",i), ";#sigma(DCA) cut;Efficiency;", 20, 0.5, 20.5);
     
-    mPhiOriginalLayer[i] = std::make_unique<TH1D>(Form("phiOriginal_L%d",i), ";phi (deg); ", 120, 0, 360);
-    mPtDupl[i] = std::make_unique<TH1D>(Form("mPtDupl_L%d",i), ";#it{p}_{T} (GeV/c); ", 100, 0, 10);
-    mEtaDupl[i] = std::make_unique<TH1D>(Form("mEtaDupl_L%d",i), ";#eta; ", 100, -2, 2);
-    mPhiDupl[i] = std::make_unique<TH1D>(Form("mPhiDupl_L%d",i), ";#phi (^{#circle}); ", 360, 0,360);
     mPt_EtaDupl[i] = new TH2D(Form("mPt_EtaDupl_L%d",i), ";#it{p}_{T} (GeV/c);#eta; ", 100, 0, 10, 100, -2, 2); 
 
-    mDuplicatedPt[i] = new TH1D(Form("mDuplicatedPt_L%d",i), Form("; #it{p}_{T} (GeV/c); Number of duplciated clusters L%d",i), nbPt, xbins);
+    mDuplicatedPt[i] = new TH1D(Form("mDuplicatedPt_log_L%d",i), Form("; #it{p}_{T} (GeV/c); Number of duplciated clusters L%d",i), nbPt, xbins);
     mDuplicatedPt[i]->Sumw2();
     mNGoodMatchesPt[i] = new TH1D(Form("mNGoodMatchesPt_L%d",i), Form("; #it{p}_{T} (GeV/c); Number of good matches L%d",i), nbPt, xbins);
     mNGoodMatchesPt[i]->Sumw2();
     mNFakeMatchesPt[i] = new TH1D(Form("mNFakeMatchesPt_L%d",i), Form("; #it{p}_{T} (GeV/c); Number of fake matches L%d",i), nbPt, xbins);
     mNFakeMatchesPt[i]->Sumw2();
 
-    mDuplicatedEtaAllPt[i] = std::make_unique<TH1D>(Form("mDuplicatedEtaAllPt_L%d",i), Form("; #eta; Number of duplciated clusters L%d",i), 40, -2, 2);
+    mDuplicatedEtaAllPt[i] = std::make_unique<TH1D>(Form("mDuplicatedEtaAllPt_L%d",i), Form("; #eta; Number of duplicated clusters L%d",i), 40, -2, 2);
     mNGoodMatchesEtaAllPt[i] = std::make_unique<TH1D>(Form("mNGoodMatchesEtaAllPt_L%d",i), Form("; #eta; Number of good matches L%d",i), 40, -2, 2);
     mNFakeMatchesEtaAllPt[i] = std::make_unique<TH1D>(Form("mNFakeMatchesEtaAllPt_L%d",i), Form("; #eta; Number of fake matches L%d",i), 40, -2, 2);
 
-    mDuplicatedPhi[i] = std::make_unique<TH1D>(Form("mDuplicatedPhi_L%d",i), Form("; #phi; Number of duplciated clusters L%d",i), 120, 0, 360);
-    mNGoodMatchesPhi[i] = std::make_unique<TH1D>(Form("mNGoodMatchesPhi_L%d",i), Form("; #phi; Number of good matches L%d",i), 120, 0, 360);
-    mNFakeMatchesPhi[i] = std::make_unique<TH1D>(Form("mNFakeMatchesPhi_L%d",i), Form("; #phi; Number of fake matches L%d",i), 120, 0, 360);
+    mDuplicatedPhi[i] = std::make_unique<TH1D>(Form("mDuplicatedPhi_L%d",i), Form("; #phi (deg); Number of duplicated clusters L%d",i), 120, 0, 360);
+    mNGoodMatchesPhi[i] = std::make_unique<TH1D>(Form("mNGoodMatchesPhi_L%d",i), Form("; #phi (deg); Number of good matches L%d",i), 120, 0, 360);
+    mNFakeMatchesPhi[i] = std::make_unique<TH1D>(Form("mNFakeMatchesPhi_L%d",i), Form("; #phi (deg); Number of fake matches L%d",i), 120, 0, 360);
   
 
     for (int j=0; j<3; j++){
-      mDuplicatedEta[i][j] = std::make_unique<TH1D>(Form("mDuplicatedEta_L%d_pt%d",i,j), Form("; #eta; Number of duplciated clusters L%d, %f < #it{p}_{T} < %f GeV/c",i, mrangesPt[j][0], mrangesPt[j][1]), 40, -2, 2);
-      mNGoodMatchesEta[i][j] = std::make_unique<TH1D>(Form("mNGoodMatchesEta_L%d_pt%d",i,j), Form("; #eta; Number of good matches L%d, %f < #it{p}_{T} < %f GeV/c",i, mrangesPt[j][0], mrangesPt[j][1]), 40, -2, 2);
-      mNFakeMatchesEta[i][j] = std::make_unique<TH1D>(Form("mNFakeMatchesEta_L%d_pt%d",i,j), Form("; #eta; Number of fake matches L%d, %f < #it{p}_{T} < %f GeV/c",i, mrangesPt[j][0], mrangesPt[j][1]), 40, -2, 2);
+      mDuplicatedEta[i][j] = std::make_unique<TH1D>(Form("mDuplicatedEta_L%d_pt%d",i,j), Form("%f < #it{p}_{T} < %f GeV/c; #eta; Number of duplicated clusters L%d", mrangesPt[j][0], mrangesPt[j][1],i), 40, -2, 2);
+      mNGoodMatchesEta[i][j] = std::make_unique<TH1D>(Form("mNGoodMatchesEta_L%d_pt%d",i,j), Form("%f < #it{p}_{T} < %f GeV/c; #eta; Number of good matches L%d",i, mrangesPt[j][0], mrangesPt[j][1],i), 40, -2, 2);
+      mNFakeMatchesEta[i][j] = std::make_unique<TH1D>(Form("mNFakeMatchesEta_L%d_pt%d",i,j), Form("%f < #it{p}_{T} < %f GeV/c; #eta; Number of fake matches L%d",i, mrangesPt[j][0], mrangesPt[j][1],i), 40, -2, 2);
     }
   }
   gStyle->SetPalette(55);
@@ -367,7 +355,6 @@ int EfficiencyStudy::getDCAClusterTrackMC(int countDuplicated = 0)
         o2::math_utils::Point3D<float> clusOriginalPointGlob = mGeometry->getMatrixT2G(clusOriginal.getSensorID()) * clusOriginalPointTrack;
 
         mPhiOriginal[layer]->Fill(phi);
-        mPhiOriginalLayer[layer]->Fill(phi);
         mPtOriginal[layer]->Fill(pt);
         mEtaOriginal[layer]->Fill(eta);
         m3DClusterPositions->Fill(clusOriginalPointGlob.x(), clusOriginalPointGlob.y(), clusOriginalPointGlob.z());
@@ -421,7 +408,6 @@ int EfficiencyStudy::getDCAClusterTrackMC(int countDuplicated = 0)
 
                   if (countDuplicated == 1){            
                     mDuplicatedPt[layerDuplicated]->Fill(pt);
-                    // den[layerDuplicated]->Fill(pt);
                     mDuplicatedEtaAllPt[layerDuplicated]->Fill(eta);
                     for (int ipt = 0; ipt < 3; ipt++){
                       if (pt>=mrangesPt[ipt][0] && pt<mrangesPt[ipt][1]){
@@ -430,17 +416,9 @@ int EfficiencyStudy::getDCAClusterTrackMC(int countDuplicated = 0)
                     }
                     
                     mDuplicatedPhi[layerDuplicated]->Fill(phi);
+                    mPtDuplicated[layerClus]->Fill(pt);
+                    mPt_EtaDupl[layerClus]->Fill(pt,eta);
                   }
-
-                  mPhiDuplicated[layerClus]->Fill(phi);
-                  mPtDuplicated[layerClus]->Fill(pt);
-                  mEtaDuplicated[layerClus]->Fill(eta);
-
-                  mPtDupl[layerClus]->Fill(pt);
-                  mEtaDupl[layerClus]->Fill(eta);
-                  mPhiDupl[layerClus]->Fill(phi);
-                  mPt_EtaDupl[layerClus]->Fill(pt,eta);
-
 
                   m3DClusterPositions->Fill(clusDuplicatedPointGlob.x(), clusDuplicatedPointGlob.y(), clusDuplicatedPointGlob.z());
                   m2DClusterDuplicatedPositions->Fill(clusDuplicatedPointGlob.x(), clusDuplicatedPointGlob.y());
@@ -485,19 +463,12 @@ int EfficiencyStudy::getDCAClusterTrackMC(int countDuplicated = 0)
     m2DClusterOriginalPositions->Write();
     m2DClusterDuplicatedPositions->Write();
 
-    for (int i=0; i<mNLayers; i++) {
-      mPhiOriginal[i]->Write();
-      mPhiDuplicated[i]->Write();
-    }
-
     mOutFile->cd("DistanceClusters");
     for (int i=0; i<mNLayers; i++) {
-
       mDistanceClustersX[i]->Write();
       mDistanceClustersY[i]->Write();
       mDistanceClustersZ[i]->Write();
       mDistanceClusters[i]->Write();
-
     }
 
     mOutFile->cd("DCA");
@@ -514,18 +485,15 @@ int EfficiencyStudy::getDCAClusterTrackMC(int countDuplicated = 0)
     mOutFile->cd("Pt_Eta_Phi/");
     for (int i=0; i<mNLayers; i++) {
       mPhiOriginal[i]->Write();
+      mDuplicatedPhi[i]->Write();
       mPtOriginal[i]->Write();
-      mEtaOriginal[i]->Write();
-      mPhiDuplicated[i]->Write();
       mPtDuplicated[i]->Write();
-      mEtaDuplicated[i]->Write();
-    }
-
-    for (int i=0; i<mNLayers; i++) {
-      mPhiOriginalLayer[i]->Write();
-      mPtDupl[i]->Write();
-      mEtaDupl[i]->Write();
-      mPhiDupl[i]->Write();
+      mDuplicatedPt[i]->Write();
+      mEtaOriginal[i]->Write();
+      mDuplicatedEtaAllPt[i]->Write(); 
+      for (int p=0; p<3; p++){
+        mDuplicatedEta[i][p]->Write();
+      }
       mPt_EtaDupl[i]->Write();
     }
   }
@@ -825,7 +793,7 @@ void EfficiencyStudy::studyClusterSelectionMC()
     sigmaDCAzDuplicated[l] = mDCAzDuplicated_layer[l]->GetRMS();
     
   }
-  
+
   for (int l=0; l<mNLayers; l++) {
     LOGP(info, "meanDCAxyDuplicated L{}: {}, meanDCAzDuplicated: {}, sigmaDCAxyDuplicated: {}, sigmaDCAzDuplicated: {}",l, meanDCAxyDuplicated[l], meanDCAzDuplicated[l], sigmaDCAxyDuplicated[l], sigmaDCAzDuplicated[l]);
   }
