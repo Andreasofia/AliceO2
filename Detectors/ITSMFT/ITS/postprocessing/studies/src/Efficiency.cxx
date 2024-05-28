@@ -52,6 +52,13 @@ using namespace o2::globaltracking;
 
 using GTrackID = o2::dataformats::GlobalTrackID;
 
+struct DCAvalues {
+  float dcaXY[3];
+  float dcaZ[3];
+  float sigmaDcaXY[3];
+  float sigmaDcaZ[3];
+};
+
 class EfficiencyStudy : public Task
 {
  public:
@@ -129,7 +136,9 @@ class EfficiencyStudy : public Task
   std::unique_ptr<TH1D> mPhiOriginal[3];
   std::unique_ptr<TH1D> mEtaOriginal[3];
   std::unique_ptr<TH1D> mPtOriginal[3];
-  std::unique_ptr<TH1D> mPtDuplicated[3];
+  TH1D* mPtDuplicated[3];
+  TH1D* mEtaDuplicated[3];
+  TH1D* mPhiDuplicated[3];
 
   // position of the clusters
   std::unique_ptr<TH3D> m3DClusterPositions;
@@ -142,7 +151,13 @@ class EfficiencyStudy : public Task
   std::unique_ptr<TH1D> mEfficiencyTotal;
   std::unique_ptr<TH1D> mEfficiencyGoodMatch_layer[3];
   std::unique_ptr<TH1D> mEfficiencyFakeMatch_layer[3];
-  std::unique_ptr<TH1D> mEfficiencyTotal_layer[3];
+  std::unique_ptr<TH1D> mEfficiencyTotal_layer[3];  
+  TH2D* mEfficiencyGoodMatchPt_layer[3];
+  TH2D* mEfficiencyFakeMatchPt_layer[3];
+  TH2D* mEfficiencyGoodMatchEta_layer[3];
+  TH2D* mEfficiencyFakeMatchEta_layer[3];
+  TH2D* mEfficiencyGoodMatchPhi_layer[3];
+  TH2D* mEfficiencyFakeMatchPhi_layer[3];
 
   // phi, eta, pt of the duplicated cluster per layer
   TH2D * mPt_EtaDupl[3];
@@ -241,9 +256,11 @@ void EfficiencyStudy::init(InitContext& ic)
 
     mPhiOriginal[i] = std::make_unique<TH1D>(Form("phiOriginal_L%d",i), ";phi (deg); ", 120, 0, 360);
     mEtaOriginal[i] = std::make_unique<TH1D>(Form("etaOriginal_L%d",i), ";eta (deg); ", 100, -2, 2);
-    mPtOriginal[i] = std::make_unique<TH1D>(Form("ptOriginal_L%d",i), ";pt (GeV); ", 100, 0, 10);
+    mPtOriginal[i] = std::make_unique<TH1D>(Form("ptOriginal_L%d",i), ";pt (GeV/c); ", 100, 0, 10);
     
-    mPtDuplicated[i] = std::make_unique<TH1D>(Form("ptDuplicated_L%d",i), ";pt (GeV); ", 100, 0, 10);
+    mPtDuplicated[i] = new TH1D(Form("ptDuplicated_L%d",i), ";pt (GeV/c); ", nbPt, xbins);
+    mEtaDuplicated[i] = new TH1D(Form("etaDuplicated_L%d",i), ";eta; ", 40,-2,2);
+    mPhiDuplicated[i] = new TH1D(Form("phiDuplicated_L%d",i), ";phi (deg); ", 120,0,360);
 
     mDCAxyDuplicated_layer[i] = std::make_unique<TH1D>(Form("dcaXYDuplicated_layer_L%d",i), "Distance between track and duplicated cluster  ;DCA xy (cm); ", 400, -0.2, 0.2);
     mDCAzDuplicated_layer[i] = std::make_unique<TH1D>(Form("dcaZDuplicated_layer_L%d",i), "Distance between track and duplicated cluster  ;DCA z (cm); ", 400, -0.2, 0.2);
@@ -251,6 +268,15 @@ void EfficiencyStudy::init(InitContext& ic)
     mEfficiencyGoodMatch_layer[i] = std::make_unique<TH1D>(Form("mEfficiencyGoodMatch_layer_L%d",i), ";#sigma(DCA) cut;Efficiency;", 20, 0.5, 20.5);
     mEfficiencyFakeMatch_layer[i] = std::make_unique<TH1D>(Form("mEfficiencyFakeMatch_layer_L%d",i), ";#sigma(DCA) cut;Efficiency;", 20, 0.5, 20.5);
     mEfficiencyTotal_layer[i] = std::make_unique<TH1D>(Form("mEfficiencyTotal_layer_L%d",i), ";#sigma(DCA) cut;Efficiency;", 20, 0.5, 20.5);
+    
+    mEfficiencyGoodMatchPt_layer[i] = new TH2D(Form("mEfficiencyGoodMatchPt_layer_L%d",i), ";#it{p}_{T} (GeV/c);#sigma(DCA) cut;Efficiency;",  nbPt, xbins, 20, 0.5, 20.5);
+    mEfficiencyFakeMatchPt_layer[i] = new TH2D(Form("mEfficiencyFakeMatchPt_layer_L%d",i), ";#it{p}_{T} (GeV/c);#sigma(DCA) cut;Efficiency;",  nbPt, xbins, 20, 0.5, 20.5);
+    
+    mEfficiencyGoodMatchEta_layer[i] = new TH2D(Form("mEfficiencyGoodMatchEta_layer_L%d",i), ";#eta;#sigma(DCA) cut;Efficiency;",  40, -2, 2, 20, 0.5, 20.5);
+    mEfficiencyFakeMatchEta_layer[i] = new TH2D(Form("mEfficiencyFakeMatchEta_layer_L%d",i), ";#eta;#sigma(DCA) cut;Efficiency;",  40, -2, 2, 20, 0.5, 20.5);
+       
+    mEfficiencyGoodMatchPhi_layer[i] = new TH2D(Form("mEfficiencyGoodMatchPhi_layer_L%d",i), ";#phi;#sigma(DCA) cut;Efficiency;",  120,0,360, 20, 0.5, 20.5);
+    mEfficiencyFakeMatchPhi_layer[i] = new TH2D(Form("mEfficiencyFakeMatchPhi_layer_L%d",i), ";#phi;#sigma(DCA) cut;Efficiency;",  120,0,360, 20, 0.5, 20.5);
     
     mPt_EtaDupl[i] = new TH2D(Form("mPt_EtaDupl_L%d",i), ";#it{p}_{T} (GeV/c);#eta; ", 100, 0, 10, 100, -2, 2); 
 
@@ -454,6 +480,9 @@ int EfficiencyStudy::getDCAClusterTrackMC(int countDuplicated = 0)
                   
                   if (countDuplicated == 0){
                     mDuplicated_layer[layerDuplicated]++; // This has to be incremented at the first call
+                    mPtDuplicated[layerClus]->Fill(pt); // This has to be incremented at the first call
+                    mEtaDuplicated[layerClus]->Fill(eta); // This has to be incremented at the first call
+                    mPhiDuplicated[layerClus]->Fill(phi); // This has to be incremented at the first call
                   }
 
                   if (countDuplicated == 1){            
@@ -467,7 +496,7 @@ int EfficiencyStudy::getDCAClusterTrackMC(int countDuplicated = 0)
                     mDuplicatedPtEta[layerDuplicated]->Fill(pt,eta);
                     mDuplicatedPtPhi[layerDuplicated]->Fill(pt,phi);
                     mDuplicatedEtaPhi[layerDuplicated]->Fill(eta,phi);
-                    mPtDuplicated[layerClus]->Fill(pt);
+                    
                     mDuplicatedEtaAllPt[layerDuplicated]->Fill(eta);
                     mDuplicatedPhiAllPt[layerDuplicated]->Fill(phi);
                     mPt_EtaDupl[layerClus]->Fill(pt,eta);
@@ -541,6 +570,8 @@ int EfficiencyStudy::getDCAClusterTrackMC(int countDuplicated = 0)
       mDuplicatedPhiAllPt[i]->Write();
       mPtOriginal[i]->Write();
       mPtDuplicated[i]->Write();
+      mEtaDuplicated[i]->Write();
+      mPhiDuplicated[i]->Write();
       mDuplicatedPt[i]->Write();
       mDuplicatedPtEta[i]->Write();
       mDuplicatedPtPhi[i]->Write();
@@ -598,13 +629,22 @@ void EfficiencyStudy::studyDCAcutsMC()
   double sigmaDCAxyDuplicated[mNLayers] = {0};
   double sigmaDCAzDuplicated[mNLayers] = {0};
 
+  DCAvalues dcaValues;
+
   for (int l=0; l<mNLayers; l++) {
     meanDCAxyDuplicated[l] = mDCAxyDuplicated_layer[l]->GetMean();
+    dcaValues.dcaXY[l]=meanDCAxyDuplicated[l];
     meanDCAzDuplicated[l] = mDCAzDuplicated_layer[l]->GetMean();
+    dcaValues.dcaZ[l]=meanDCAzDuplicated[l];
     sigmaDCAxyDuplicated[l] = mDCAxyDuplicated_layer[l]->GetRMS();
+    dcaValues.sigmaDcaXY[l]=sigmaDCAxyDuplicated[l];
     sigmaDCAzDuplicated[l] = mDCAzDuplicated_layer[l]->GetRMS();
-    
+    dcaValues.sigmaDcaZ[l]=sigmaDCAzDuplicated[l];
   }
+
+  mOutFile->mkdir("DCAvalues/");
+  mOutFile->cd("DCAvalues/");
+  mOutFile->WriteObject(&dcaValues, "DCAvalues");
 
   for (int l=0; l<mNLayers; l++) {
     LOGP(info, "meanDCAxyDuplicated L{}: {}, meanDCAzDuplicated: {}, sigmaDCAxyDuplicated: {}, sigmaDCAzDuplicated: {}",l, meanDCAxyDuplicated[l], meanDCAzDuplicated[l], sigmaDCAxyDuplicated[l], sigmaDCAzDuplicated[l]);
@@ -633,6 +673,30 @@ void EfficiencyStudy::studyDCAcutsMC()
   unsigned int nGoodMatches_layer[mNLayers][20] = {0};
   unsigned int nFakeMatches_layer[mNLayers][20] = {0};
 
+  int nbPt = 75;
+  double xbins[nbPt + 1], ptcutl = 0.05, ptcuth = 7.5;
+  double a = std::log(ptcuth / ptcutl) / nbPt;
+  for (int i = 0; i <= nbPt; i++)
+    xbins[i] = ptcutl * std::exp(i * a);
+
+
+  TH2D * nGoodMatchesPt_layer[mNLayers];
+  TH2D * nFakeMatchesPt_layer[mNLayers];
+
+  TH2D * nGoodMatchesEta_layer[mNLayers];
+  TH2D * nFakeMatchesEta_layer[mNLayers];
+
+  TH2D * nGoodMatchesPhi_layer[mNLayers];
+  TH2D * nFakeMatchesPhi_layer[mNLayers];
+  for (int l=0; l<mNLayers;l++){
+    nGoodMatchesPt_layer[l] = new TH2D(Form("nGoodMatchesPt_layer_L%d",l), ";pt; nGoodMatches",nbPt, xbins, 20, 0.5,20.5);
+    nFakeMatchesPt_layer[l] = new TH2D(Form("nFakeMatchesPt_layer_L%d",l), ";pt; nFakeMatches",nbPt, xbins, 20, 0.5,20.5);
+    nGoodMatchesEta_layer[l] = new TH2D(Form("nGoodMatchesEta_layer_L%d",l), ";#eta; nGoodMatches",40,-2,2, 20, 0.5,20.5);
+    nFakeMatchesEta_layer[l] = new TH2D(Form("nFakeMatchesEta_layer_L%d",l), ";#eta; nFakeMatches",40,-2,2, 20, 0.5,20.5);
+    nGoodMatchesPhi_layer[l] = new TH2D(Form("nGoodMatchesPhi_layer_L%d",l), ";#Phi; nGoodMatches",120,0,360, 20, 0.5,20.5);
+    nFakeMatchesPhi_layer[l] = new TH2D(Form("nFakeMatchesPhi_layer_L%d",l), ";#Phi; nFakeMatches",120,0,360, 20, 0.5,20.5);
+  }
+
   for (unsigned int iROF = 0; iROF < mTracksROFRecords.size(); iROF++) { // loop on ROFRecords array
     rofIndexTrack = mTracksROFRecords[iROF].getFirstEntry();
     rofNEntriesTrack = mTracksROFRecords[iROF].getNEntries();
@@ -643,6 +707,9 @@ void EfficiencyStudy::studyDCAcutsMC()
     for (unsigned int iTrack = rofIndexTrack; iTrack < rofIndexTrack + rofNEntriesTrack; iTrack++) { // loop on tracks per ROF
       auto track = mTracks[iTrack];
       o2::track::TrackParCov trackParCov = mTracks[iTrack];
+      auto pt = trackParCov.getPt();
+      auto eta = trackParCov.getEta();
+      auto phi = trackParCov.getPhi()*180/M_PI;
       int firstClus = track.getFirstClusterEntry(); // get the first cluster of the track
       int ncl = track.getNumberOfClusters();        // get the number of clusters of the track
 
@@ -726,10 +793,16 @@ void EfficiencyStudy::studyDCAcutsMC()
                   if (isGoodMatch){
                     nGoodMatches[i]++;
                     nGoodMatches_layer[layerDuplicated][i]++;
+                    nGoodMatchesPt_layer[layerDuplicated]->Fill(pt, i);
+                    nGoodMatchesEta_layer[layerDuplicated]->Fill(eta, i);
+                    nGoodMatchesPhi_layer[layerDuplicated]->Fill(phi, i);
                   }
                   else {
                     nFakeMatches[i]++;
                     nFakeMatches_layer[layerDuplicated][i]++;
+                    nFakeMatchesPt_layer[layerDuplicated]->Fill(pt, i);
+                    nFakeMatchesEta_layer[layerDuplicated]->Fill(eta, i);
+                    nFakeMatchesPhi_layer[layerDuplicated]->Fill(phi, i);
                   }
                 } else if (mVerboseOutput)
                   LOGP(info, "Check DCA failed");
@@ -752,6 +825,31 @@ void EfficiencyStudy::studyDCAcutsMC()
       mEfficiencyGoodMatch_layer[l]->SetBinContent(i+1, nGoodMatches_layer[l][i]);
       mEfficiencyFakeMatch_layer[l]->SetBinContent(i+1, nFakeMatches_layer[l][i]);
       mEfficiencyTotal_layer[l]->SetBinContent(i+1, double(nGoodMatches_layer[l][i] + nFakeMatches_layer[l][i]));
+
+      for (int ipt = 0; ipt<mPtDuplicated[l]->GetNbinsX(); ipt++){
+        if (mPtDuplicated[l]->GetBinContent(ipt+1)!=0)
+          mEfficiencyGoodMatchPt_layer[l]->SetBinContent(ipt+1, i+1, nGoodMatchesPt_layer[l]->GetBinContent(ipt+1, i+1)/mPtDuplicated[l]->GetBinContent(ipt+1));
+          mEfficiencyFakeMatchPt_layer[l]->SetBinContent(ipt+1, i+1, nFakeMatchesPt_layer[l]->GetBinContent(ipt+1, i+1)/mPtDuplicated[l]->GetBinContent(ipt+1));
+        // std::cout<<"nGoodMatchesPt_layer bin content: "<<ipt<<"  "<<i<<"  "<<nGoodMatchesPt_layer[l]->GetBinContent(ipt+1,i+1)<<std::endl;
+        // std::cout<<"mDuplicatedPt bin content: "<<ipt<<"  "<<i<<"  "<<mPtDuplicated[l]->GetBinContent(ipt+1)<<std::endl;
+        // std::cout<<"mEfficiencyGoodMatchPt_layer bin content: "<<ipt<<"  "<<i<<"  "<<mEfficiencyGoodMatchPt_layer[l]->GetBinContent(ipt+1,i+1)<<"----" <<nGoodMatchesPt_layer[l]->GetBinContent(ipt+1, i+1)/mPtDuplicated[l]->GetBinContent(ipt+1)<<std::endl;
+      }
+
+      for (int ieta = 0; ieta<mEtaDuplicated[l]->GetNbinsX(); ieta++){
+        if (mEtaDuplicated[l]->GetBinContent(ieta+1)!=0)
+          mEfficiencyGoodMatchEta_layer[l]->SetBinContent(ieta+1, i+1, nGoodMatchesEta_layer[l]->GetBinContent(ieta+1, i+1)/mEtaDuplicated[l]->GetBinContent(ieta+1));
+          mEfficiencyFakeMatchEta_layer[l]->SetBinContent(ieta+1, i+1, nFakeMatchesEta_layer[l]->GetBinContent(ieta+1, i+1)/mEtaDuplicated[l]->GetBinContent(ieta+1));
+      }
+
+    
+      for (int iphi = 0; iphi<mPhiDuplicated[l]->GetNbinsX(); iphi++){
+        if (mPhiDuplicated[l]->GetBinContent(iphi+1)!=0)
+          mEfficiencyGoodMatchPhi_layer[l]->SetBinContent(iphi+1, i+1, nGoodMatchesPhi_layer[l]->GetBinContent(iphi+1, i+1)/mPhiDuplicated[l]->GetBinContent(iphi+1));
+          mEfficiencyFakeMatchPhi_layer[l]->SetBinContent(iphi+1, i+1, nFakeMatchesPhi_layer[l]->GetBinContent(iphi+1, i+1)/mPhiDuplicated[l]->GetBinContent(iphi+1));
+      }
+
+      
+
     }
   }
 
@@ -765,12 +863,31 @@ void EfficiencyStudy::studyDCAcutsMC()
   mEfficiencyFakeMatch->Scale(1./double(duplicated), "b");
   mEfficiencyTotal->Scale(1./double(duplicated), "b");
 
+  mOutFile->mkdir("EffVsDCA2D/");
+  mOutFile->cd("EffVsDCA2D/");
+  for (int l=0; l<mNLayers; l++){
+    mEfficiencyGoodMatchPt_layer[l]->GetZaxis()->SetRangeUser(0,1);
+    mEfficiencyGoodMatchPt_layer[l]->Write();  
+    mEfficiencyGoodMatchEta_layer[l]->GetZaxis()->SetRangeUser(0,1);
+    mEfficiencyGoodMatchEta_layer[l]->Write();  
+    mEfficiencyGoodMatchPhi_layer[l]->GetZaxis()->SetRangeUser(0,1);
+    mEfficiencyGoodMatchPhi_layer[l]->Write();
+    mEfficiencyFakeMatchPt_layer[l]->GetZaxis()->SetRangeUser(0,1);
+    mEfficiencyFakeMatchPt_layer[l]->Write();  
+    mEfficiencyFakeMatchEta_layer[l]->GetZaxis()->SetRangeUser(0,1);
+    mEfficiencyFakeMatchEta_layer[l]->Write();  
+    mEfficiencyFakeMatchPhi_layer[l]->GetZaxis()->SetRangeUser(0,1);
+    mEfficiencyFakeMatchPhi_layer[l]->Write();
+  }  
+
+
   mOutFile->mkdir("Efficiency/");
   mOutFile->cd("Efficiency/");
   mEfficiencyGoodMatch->Write();
   mEfficiencyFakeMatch->Write();
   mEfficiencyTotal->Write();
   for (int l=0; l<mNLayers; l++){
+    
     mEfficiencyGoodMatch_layer[l]->Write();
     mEfficiencyFakeMatch_layer[l]->Write();
     mEfficiencyTotal_layer[l]->Write();
@@ -945,7 +1062,7 @@ void EfficiencyStudy::studyClusterSelectionMC()
           }
 
           /// Imposing that the distance between the original cluster and the duplicated one is less than x sigma
-          if (!(abs(meanDCAxyDuplicated[layerDuplicated] - clusDuplicatedDCA[0]) < 5 * sigmaDCAxyDuplicated[layerDuplicated] && abs(meanDCAzDuplicated[layerDuplicated] - clusDuplicatedDCA[1]) < 5 * sigmaDCAzDuplicated[layerDuplicated])) {
+          if (!(abs(meanDCAxyDuplicated[layerDuplicated] - clusDuplicatedDCA[0]) < 8 * sigmaDCAxyDuplicated[layerDuplicated] && abs(meanDCAzDuplicated[layerDuplicated] - clusDuplicatedDCA[1]) < 8 * sigmaDCAzDuplicated[layerDuplicated])) {
             continue;
           }
 
