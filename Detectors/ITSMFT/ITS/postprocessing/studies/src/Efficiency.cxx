@@ -61,7 +61,7 @@ class EfficiencyStudy : public Task
                   mask_t src,
                   bool useMC,
                   std::shared_ptr<o2::steer::MCKinematicsReader> kineReader,
-                  std::shared_ptr<o2::base::GRPGeomRequest> gr) : mDataRequest(dr), mTracksSrc(src), mUseMC(useMC), mKineReader(kineReader), mGGCCDBRequest(gr) {};
+                  std::shared_ptr<o2::base::GRPGeomRequest> gr) : mDataRequest(dr), mTracksSrc(src), mUseMC(useMC), mKineReader(kineReader), mGGCCDBRequest(gr){};
 
   ~EfficiencyStudy() final = default;
   void init(InitContext&) final;
