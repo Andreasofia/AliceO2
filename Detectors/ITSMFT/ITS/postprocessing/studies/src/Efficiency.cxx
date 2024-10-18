@@ -89,7 +89,7 @@ class EfficiencyStudy : public Task
   std::shared_ptr<o2::steer::MCKinematicsReader> mKineReader;
   GeometryTGeo* mGeometry;
   const o2::itsmft::TopologyDictionary* mDict = nullptr;
-  float mrangesPt[NLAYERS][2] = {{0, 0.5}, {0.5, 2}, {2, 7.5}};
+  float mrangesPt[NLAYERS][2] = {{0., 0.5}, {0.5, 2.}, {2., 7.5}};
 
   // Spans
   gsl::span<const o2::itsmft::ROFRecord> mTracksROFRecords;
@@ -479,12 +479,12 @@ void EfficiencyStudy::init(InitContext& ic)
 
     for (int j = 0; j < 3; j++) {
       mDuplicatedEta[i][j] = std::make_unique<TH1D>(Form("mDuplicatedEta_L%d_pt%d", i, j), Form("%f < #it{p}_{T} < %f GeV/c; #eta; Number of duplicated clusters L%d", mrangesPt[j][0], mrangesPt[j][1], i), 40, -2, 2);
-      mNGoodMatchesEta[i][j] = std::make_unique<TH1D>(Form("mNGoodMatchesEta_L%d_pt%d", i, j), Form("%f < #it{p}_{T} < %f GeV/c; #eta; Number of good matches L%d", i, mrangesPt[j][0], mrangesPt[j][1], i), 40, -2, 2);
-      mNFakeMatchesEta[i][j] = std::make_unique<TH1D>(Form("mNFakeMatchesEta_L%d_pt%d", i, j), Form("%f < #it{p}_{T} < %f GeV/c; #eta; Number of fake matches L%d", i, mrangesPt[j][0], mrangesPt[j][1], i), 40, -2, 2);
+      mNGoodMatchesEta[i][j] = std::make_unique<TH1D>(Form("mNGoodMatchesEta_L%d_pt%d", i, j), Form("%f < #it{p}_{T} < %f GeV/c; #eta; Number of good matches L%d", mrangesPt[j][0], mrangesPt[j][1], i), 40, -2, 2);
+      mNFakeMatchesEta[i][j] = std::make_unique<TH1D>(Form("mNFakeMatchesEta_L%d_pt%d", i, j), Form("%f < #it{p}_{T} < %f GeV/c; #eta; Number of fake matches L%d", mrangesPt[j][0], mrangesPt[j][1], i), 40, -2, 2);
 
       mDuplicatedPhi[i][j] = std::make_unique<TH1D>(Form("mDuplicatedPhi_L%d_pt%d", i, j), Form("%f < #it{p}_{T} < %f GeV/c; #phi; Number of duplicated clusters L%d", mrangesPt[j][0], mrangesPt[j][1], i), 1440, -180, 180);
-      mNGoodMatchesPhi[i][j] = std::make_unique<TH1D>(Form("mNGoodMatchesPhi_L%d_pt%d", i, j), Form("%f < #it{p}_{T} < %f GeV/c; #phi; Number of good matches L%d", i, mrangesPt[j][0], mrangesPt[j][1], i), 1440, -180, 180);
-      mNFakeMatchesPhi[i][j] = std::make_unique<TH1D>(Form("mNFakeMatchesPhi_L%d_pt%d", i, j), Form("%f < #it{p}_{T} < %f GeV/c; #phi; Number of fake matches L%d", i, mrangesPt[j][0], mrangesPt[j][1], i), 1440, -180, 180);
+      mNGoodMatchesPhi[i][j] = std::make_unique<TH1D>(Form("mNGoodMatchesPhi_L%d_pt%d", i, j), Form("%f < #it{p}_{T} < %f GeV/c; #phi; Number of good matches L%d", mrangesPt[j][0], mrangesPt[j][1], i), 1440, -180, 180);
+      mNFakeMatchesPhi[i][j] = std::make_unique<TH1D>(Form("mNFakeMatchesPhi_L%d_pt%d", i, j), Form("%f < #it{p}_{T} < %f GeV/c; #phi; Number of fake matches L%d", mrangesPt[j][0], mrangesPt[j][1], i), 1440, -180, 180);
     }
   }
   gStyle->SetPalette(55);
@@ -2169,8 +2169,7 @@ void EfficiencyStudy::getEfficiency(bool isMC)
         /////////////////////////////////////
         if (!(keepTrack)) {
           continue; /// if the track (cluster) is not eligible for any layer, go to the next one
-        }
-        else {      /// fill the den and go ahead
+        } else {    /// fill the den and go ahead
           chi2trackAccepted->Fill(chi2);
           denPt[layerOriginal]->Fill(pt);
           denPhi[layerOriginal]->Fill(phiOriginal);
@@ -2465,8 +2464,7 @@ void EfficiencyStudy::getEfficiencyAndTrackInfo(bool isMC)
         }
         if (!(keepTrack)) {
           continue; /// if the track (cluster) is not eligible for any layer, go to the next one
-        }
-        else {      /// fill the den and go ahead
+        } else {    /// fill the den and go ahead
           chi2trackAccepted->Fill(chi2);
           denPt[layerOriginal]->Fill(pt);
           denPhi[layerOriginal]->Fill(phiOriginal);
