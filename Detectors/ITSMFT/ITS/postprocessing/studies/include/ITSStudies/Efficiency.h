@@ -55,6 +55,11 @@ int dcaCut = 8;
 float mDCACutsXY[3][2] = {{dcaXY[0] - dcaCut * sigmaDcaXY[0], dcaXY[0] + dcaCut* sigmaDcaXY[0]}, {dcaXY[1] - dcaCut * sigmaDcaXY[1], dcaXY[1] + dcaCut* sigmaDcaXY[1]}, {dcaXY[2] - dcaCut * sigmaDcaXY[2], dcaXY[2] + dcaCut* sigmaDcaXY[2]}}; // cuts at 8 sigma for each layer for xy. The values represent m-8sigma and m+8sigma
 float mDCACutsZ[3][2] = {{dcaZ[0] - dcaCut * sigmaDcaZ[0], dcaZ[0] + dcaCut* sigmaDcaZ[0]}, {dcaZ[1] - dcaCut * sigmaDcaZ[1], dcaZ[1] + dcaCut* sigmaDcaZ[1]}, {dcaZ[2] - dcaCut * sigmaDcaZ[2], dcaZ[2] + dcaCut* sigmaDcaZ[2]}};
 
+// std::unique_ptr<std::vector<int>> mExcludedChipMC = std::make_unique(new std::vector<int>{66, 67, 68, 75, 76, 77, 84, 85, 86, 93, 94, 95, 102, 103, 104, 265, 266, 267, 274, 275, 276, 283, 284, 285, 413, 414, 415, 422, 423, 424, 431, 432, 433});
+// std::vector<int>* mExcludedChipMC = new std::vector<int>{84, 85, 86, 265, 266, 267};
+// std::vector<int>* mExcludedChipMC = new std::vector<int>{85, 266};
+std::vector<int>* mExcludedChipMC = new std::vector<int>{66, 67, 68, 75, 76, 77, 84, 85, 86, 93, 94, 95, 102, 103, 104, 265, 266, 267, 274, 275, 276, 283, 284, 285, 413, 414, 415, 422, 423, 424, 431, 432, 433};
+// std::vector<int> mExcludedChipMC = {66, 67, 68, 75, 76, 77, 84, 85, 86, 93, 94, 95, 102, 103, 104, 265, 266, 267, 274, 275, 276, 283, 284, 285, 413, 414, 415, 422, 423, 424, 431, 432, 433};
 } // namespace study
 } // namespace its
 } // namespace o2
