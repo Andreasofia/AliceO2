@@ -491,20 +491,20 @@ void EfficiencyStudy::init(InitContext& ic)
     mDCAxyOriginal[i] = std::make_unique<TH1D>(Form("dcaXYOriginal_L%d", i), "Distance between track and original cluster ;DCA xy (cm); ", 200, -0.01, 0.01);
     mDCAzOriginal[i] = std::make_unique<TH1D>(Form("dcaZOriginal_L%d", i), "Distance between track and original cluster ;DCA z (cm); ", 200, -0.01, 0.01);
 
-    mPhiOriginal[i] = std::make_unique<TH1D>(Form("phiOriginal_L%d", i), ";phi (rad); ", 180, -3.2, 3.2);
+    mPhiOriginal[i] = std::make_unique<TH1D>(Form("phiOriginal_L%d", i), ";phi (rad); ", 90, -3.2, 3.2);
     mPhiTrackOriginal[i] = std::make_unique<TH1D>(Form("phiTrackOriginal_L%d", i), ";phi Track (rad); ", 1440, 0, 360);
     mEtaOriginal[i] = std::make_unique<TH1D>(Form("etaOriginal_L%d", i), ";eta (rad); ", 100, -2, 2);
     mPtOriginal[i] = std::make_unique<TH1D>(Form("ptOriginal_L%d", i), ";pt (GeV/c); ", 100, 0, 10);
 
-    mZvsPhiDUplicated[i] = std::make_unique<TH2D>(Form("zvsphiDuplicated_L%d", i), ";z (cm);phi (rad)", 400, -20, 20, 180, -3.2, 3.2);
+    mZvsPhiDUplicated[i] = std::make_unique<TH2D>(Form("zvsphiDuplicated_L%d", i), ";z (cm);phi (rad)", 400, -20, 20, 90, -3.2, 3.2);
 
     mPtDuplicated[i] = new TH1D(Form("ptDuplicated_L%d", i), ";pt (GeV/c); ", nbPt, 0, 7.5); // xbins);
     mEtaDuplicated[i] = new TH1D(Form("etaDuplicated_L%d", i), ";eta; ", 40, -2, 2);
-    mPhiDuplicated[i] = new TH1D(Form("phiDuplicated_L%d", i), ";phi (rad); ", 180, -3.2, 3.2);
+    mPhiDuplicated[i] = new TH1D(Form("phiDuplicated_L%d", i), ";phi (rad); ", 90, -3.2, 3.2);
     mPhiTrackDuplicated[i] = new TH1D(Form("phiTrackDuplicated_L%d", i), ";phi Track (rad); ", 1440, 0, 360);
-    mPhiOriginalIfDuplicated[i] = new TH1D(Form("phiOriginalIfDuplicated_L%d", i), ";phi (rad); ", 180, -3.2, 3.2);
-    mPhiTrackDuplicatedvsphiDuplicated[i] = new TH2D(Form("phiTrackDuplicatedvsphiDuplicated_L%d", i), ";phi track (rad);phi oridinal if duplicated (rad); ", 1440, 0, 360, 180, -3.2, 3.2);
-    mPhiTrackoriginalvsphioriginal[i] = new TH2D(Form("phiTrackoriginalvsphioriginal_L%d", i), ";phi track (rad);phi original (rad); ", 1440, 0, 360, 180, -3.2, 3.2);
+    mPhiOriginalIfDuplicated[i] = new TH1D(Form("phiOriginalIfDuplicated_L%d", i), ";phi (rad); ", 90, -3.2, 3.2);
+    mPhiTrackDuplicatedvsphiDuplicated[i] = new TH2D(Form("phiTrackDuplicatedvsphiDuplicated_L%d", i), ";phi track (rad);phi oridinal if duplicated (rad); ", 1440, 0, 360, 90, -3.2, 3.2);
+    mPhiTrackoriginalvsphioriginal[i] = new TH2D(Form("phiTrackoriginalvsphioriginal_L%d", i), ";phi track (rad);phi original (rad); ", 1440, 0, 360, 90, -3.2, 3.2);
     mDCAxyDuplicated_layer[i] = std::make_unique<TH1D>(Form("dcaXYDuplicated_layer_L%d", i), "Distance between track and duplicated cluster  ;DCA xy (cm); ", 100, -0.01, 0.01);
     mDCAzDuplicated_layer[i] = std::make_unique<TH1D>(Form("dcaZDuplicated_layer_L%d", i), "Distance between track and duplicated cluster  ;DCA z (cm); ", 100, -0.01, 0.01);
 
@@ -518,10 +518,10 @@ void EfficiencyStudy::init(InitContext& ic)
     mEfficiencyGoodMatchEta_layer[i] = new TH2D(Form("mEfficiencyGoodMatchEta_layer_L%d", i), ";#eta;#sigma(DCA) cut;Efficiency;", 40, -2, 2, 20, 0.5, 20.5);
     mEfficiencyFakeMatchEta_layer[i] = new TH2D(Form("mEfficiencyFakeMatchEta_layer_L%d", i), ";#eta;#sigma(DCA) cut;Efficiency;", 40, -2, 2, 20, 0.5, 20.5);
 
-    mEfficiencyGoodMatchPhi_layer[i] = new TH2D(Form("mEfficiencyGoodMatchPhi_layer_L%d", i), ";#phi;#sigma(DCA) cut;Efficiency;", 180, -3.2, 3.2, 20, 0.5, 20.5);
+    mEfficiencyGoodMatchPhi_layer[i] = new TH2D(Form("mEfficiencyGoodMatchPhi_layer_L%d", i), ";#phi;#sigma(DCA) cut;Efficiency;", 90, -3.2, 3.2, 20, 0.5, 20.5);
     mEfficiencyGoodMatchPhiTrack_layer[i] = new TH2D(Form("mEfficiencyGoodMatchPhiTrack_layer_L%d", i), ";#phi track;#sigma(DCA) cut;Efficiency;", 1440, 0, 360, 20, 0.5, 20.5);
-    mEfficiencyGoodMatchPhiOriginal_layer[i] = new TH2D(Form("mEfficiencyGoodMatchPhiOriginal_layer_L%d", i), ";#phi Original;#sigma(DCA) cut;Efficiency;", 180, -3.2, 3.2, 20, 0.5, 20.5);
-    mEfficiencyFakeMatchPhi_layer[i] = new TH2D(Form("mEfficiencyFakeMatchPhi_layer_L%d", i), ";#phi;#sigma(DCA) cut;Efficiency;", 180, -3.2, 3.2, 20, 0.5, 20.5);
+    mEfficiencyGoodMatchPhiOriginal_layer[i] = new TH2D(Form("mEfficiencyGoodMatchPhiOriginal_layer_L%d", i), ";#phi Original;#sigma(DCA) cut;Efficiency;", 90, -3.2, 3.2, 20, 0.5, 20.5);
+    mEfficiencyFakeMatchPhi_layer[i] = new TH2D(Form("mEfficiencyFakeMatchPhi_layer_L%d", i), ";#phi;#sigma(DCA) cut;Efficiency;", 90, -3.2, 3.2, 20, 0.5, 20.5);
     mEfficiencyFakeMatchPhiTrack_layer[i] = new TH2D(Form("mEfficiencyFakeMatchPhiTrack_layer_L%d", i), ";#phi Track;#sigma(DCA) cut;Efficiency;", 1440, 0, 360, 20, 0.5, 20.5);
 
     mPt_EtaDupl[i] = new TH2D(Form("mPt_EtaDupl_L%d", i), ";#it{p}_{T} (GeV/c);#eta; ", 100, 0, 10, 100, -2, 2);
@@ -547,11 +547,11 @@ void EfficiencyStudy::init(InitContext& ic)
     mNFakeMatchesCol[i] = new TH1D(Form("mNFakeMatchesCol_L%d", i), Form(";Col; Number of fake matches L%d", i),  128, -0.5, 1023.5);
     mNFakeMatchesCol[i]->Sumw2();
 
-    mDuplicatedZ[i] = new TH1D(Form("mDuplicatedZ_L%d", i), Form("; Z (cm); Number of duplciated clusters L%d", i), 150, -15, 15);
+    mDuplicatedZ[i] = new TH1D(Form("mDuplicatedZ_L%d", i), Form("; Z (cm); Number of duplciated clusters L%d", i), 100, -15, 15);
     mDuplicatedZ[i]->Sumw2();
-    mNGoodMatchesZ[i] = new TH1D(Form("mNGoodMatchesZ_L%d", i), Form("; Z (cm); Number of good matches L%d", i),  150, -15, 15);
+    mNGoodMatchesZ[i] = new TH1D(Form("mNGoodMatchesZ_L%d", i), Form("; Z (cm); Number of good matches L%d", i),  100, -15, 15);
     mNGoodMatchesZ[i]->Sumw2();
-    mNFakeMatchesZ[i] = new TH1D(Form("mNFakeMatchesZ_L%d", i), Form(";Z (cm); Number of fake matches L%d", i),  150, -15, 15);
+    mNFakeMatchesZ[i] = new TH1D(Form("mNFakeMatchesZ_L%d", i), Form(";Z (cm); Number of fake matches L%d", i),  100, -15, 15);
     mNFakeMatchesZ[i]->Sumw2();
 
     mDuplicatedPtEta[i] = new TH2D(Form("mDuplicatedPtEta_log_L%d", i), Form("; #it{p}_{T} (GeV/c);#eta; Number of duplciated clusters L%d", i), nbPt, 0, 7.5 /* xbins*/, 40, -2, 2);
@@ -561,36 +561,36 @@ void EfficiencyStudy::init(InitContext& ic)
     mNFakeMatchesPtEta[i] = new TH2D(Form("mNFakeMatchesPtEta_L%d", i), Form("; #it{p}_{T} (GeV/c);#eta; Number of good matches L%d", i), nbPt, 0, 7.5 /* xbins*/, 40, -2, 2);
     mNFakeMatchesPtEta[i]->Sumw2();
 
-    mDuplicatedPtPhi[i] = new TH2D(Form("mDuplicatedPtPhi_log_L%d", i), Form("; #it{p}_{T} (GeV/c);#phi (rad); Number of duplciated clusters L%d", i), nbPt, 0, 7.5 /* xbins*/, 180, -3.2, 3.2);
+    mDuplicatedPtPhi[i] = new TH2D(Form("mDuplicatedPtPhi_log_L%d", i), Form("; #it{p}_{T} (GeV/c);#phi (rad); Number of duplciated clusters L%d", i), nbPt, 0, 7.5 /* xbins*/, 90, -3.2, 3.2);
     mDuplicatedPtPhi[i]->Sumw2();
-    mNGoodMatchesPtPhi[i] = new TH2D(Form("mNGoodMatchesPtPhi_L%d", i), Form("; #it{p}_{T} (GeV/c);#phi (rad); Number of good matches L%d", i), nbPt, 0, 7.5 /* xbins*/, 180, -3.2, 3.2);
+    mNGoodMatchesPtPhi[i] = new TH2D(Form("mNGoodMatchesPtPhi_L%d", i), Form("; #it{p}_{T} (GeV/c);#phi (rad); Number of good matches L%d", i), nbPt, 0, 7.5 /* xbins*/, 90, -3.2, 3.2);
     mNGoodMatchesPtPhi[i]->Sumw2();
-    mNFakeMatchesPtPhi[i] = new TH2D(Form("mNFakeMatchesPtPhi_L%d", i), Form("; #it{p}_{T} (GeV/c);#phi (rad); Number of good matches L%d", i), nbPt, 0, 7.5 /* xbins*/, 180, -3.2, 3.2);
+    mNFakeMatchesPtPhi[i] = new TH2D(Form("mNFakeMatchesPtPhi_L%d", i), Form("; #it{p}_{T} (GeV/c);#phi (rad); Number of good matches L%d", i), nbPt, 0, 7.5 /* xbins*/, 90, -3.2, 3.2);
     mNFakeMatchesPtPhi[i]->Sumw2();
 
-    mDuplicatedEtaPhi[i] = new TH2D(Form("mDuplicatedEtaPhi_L%d", i), Form("; #eta;#phi (rad); Number of duplciated clusters L%d", i), 40, -2, 2, 180, -3.2, 3.2);
+    mDuplicatedEtaPhi[i] = new TH2D(Form("mDuplicatedEtaPhi_L%d", i), Form("; #eta;#phi (rad); Number of duplciated clusters L%d", i), 40, -2, 2, 90, -3.2, 3.2);
     mDuplicatedEtaPhi[i]->Sumw2();
-    mNGoodMatchesEtaPhi[i] = new TH2D(Form("mNGoodMatchesEtaPhi_L%d", i), Form("; #eta;#phi (rad); Number of good matches L%d", i), 40, -2, 2, 180, -3.2, 3.2);
+    mNGoodMatchesEtaPhi[i] = new TH2D(Form("mNGoodMatchesEtaPhi_L%d", i), Form("; #eta;#phi (rad); Number of good matches L%d", i), 40, -2, 2, 90, -3.2, 3.2);
     mNGoodMatchesEtaPhi[i]->Sumw2();
-    mNFakeMatchesEtaPhi[i] = new TH2D(Form("mNFakeMatchesEtaPhi_L%d", i), Form("; #eta;#phi (rad); Number of good matches L%d", i), 40, -2, 2, 180, -3.2, 3.2);
+    mNFakeMatchesEtaPhi[i] = new TH2D(Form("mNFakeMatchesEtaPhi_L%d", i), Form("; #eta;#phi (rad); Number of good matches L%d", i), 40, -2, 2, 90, -3.2, 3.2);
     mNFakeMatchesEtaPhi[i]->Sumw2();
 
     mDuplicatedEtaAllPt[i] = std::make_unique<TH1D>(Form("mDuplicatedEtaAllPt_L%d", i), Form("; #eta; Number of duplicated clusters L%d", i), 40, -2, 2);
     mNGoodMatchesEtaAllPt[i] = std::make_unique<TH1D>(Form("mNGoodMatchesEtaAllPt_L%d", i), Form("; #eta; Number of good matches L%d", i), 40, -2, 2);
     mNFakeMatchesEtaAllPt[i] = std::make_unique<TH1D>(Form("mNFakeMatchesEtaAllPt_L%d", i), Form("; #eta; Number of fake matches L%d", i), 40, -2, 2);
 
-    mDuplicatedPhiAllPt[i] = std::make_unique<TH1D>(Form("mDuplicatedPhiAllPt_L%d", i), Form("; #phi (rad); Number of duplicated clusters L%d", i), 180, -3.2, 3.2);
-    mNGoodMatchesPhiAllPt[i] = std::make_unique<TH1D>(Form("mNGoodMatchesPhiAllPt_L%d", i), Form("; #phi (rad); Number of good matches L%d", i), 180, -3.2, 3.2);
-    mNFakeMatchesPhiAllPt[i] = std::make_unique<TH1D>(Form("mNFakeMatchesPhiAllPt_L%d", i), Form("; #phi (rad); Number of fake matches L%d", i), 180, -3.2, 3.2);
+    mDuplicatedPhiAllPt[i] = std::make_unique<TH1D>(Form("mDuplicatedPhiAllPt_L%d", i), Form("; #phi (rad); Number of duplicated clusters L%d", i), 90, -3.2, 3.2);
+    mNGoodMatchesPhiAllPt[i] = std::make_unique<TH1D>(Form("mNGoodMatchesPhiAllPt_L%d", i), Form("; #phi (rad); Number of good matches L%d", i), 90, -3.2, 3.2);
+    mNFakeMatchesPhiAllPt[i] = std::make_unique<TH1D>(Form("mNFakeMatchesPhiAllPt_L%d", i), Form("; #phi (rad); Number of fake matches L%d", i), 90, -3.2, 3.2);
 
     mnGoodMatchesPt_layer[i] = new TH2D(Form("mnGoodMatchesPt_layer_L%d", i), ";pt; nGoodMatches", nbPt, 0, 7.5 /* xbins*/, 20, 0.5, 20.5);
     mnFakeMatchesPt_layer[i] = new TH2D(Form("mnFakeMatchesPt_layer_L%d", i), ";pt; nFakeMatches", nbPt, 0, 7.5 /* xbins*/, 20, 0.5, 20.5);
     mnGoodMatchesEta_layer[i] = new TH2D(Form("mnGoodMatchesEta_layer_L%d", i), ";#eta; nGoodMatches", 40, -2, 2, 20, 0.5, 20.5);
     mnFakeMatchesEta_layer[i] = new TH2D(Form("mnFakeMatchesEta_layer_L%d", i), ";#eta; nFakeMatches", 40, -2, 2, 20, 0.5, 20.5);
-    mnGoodMatchesPhi_layer[i] = new TH2D(Form("mnGoodMatchesPhi_layer_L%d", i), ";#Phi; nGoodMatches", 180, -3.2, 3.2, 20, 0.5, 20.5);
+    mnGoodMatchesPhi_layer[i] = new TH2D(Form("mnGoodMatchesPhi_layer_L%d", i), ";#Phi; nGoodMatches", 90, -3.2, 3.2, 20, 0.5, 20.5);
     mnGoodMatchesPhiTrack_layer[i] = new TH2D(Form("mnGoodMatchesPhiTrack_layer_L%d", i), ";#Phi track; nGoodMatches", 1440, 0, 360, 20, 0.5, 20.5);
-    mnGoodMatchesPhiOriginal_layer[i] = new TH2D(Form("mnGoodMatchesPhiOriginal_layer_L%d", i), ";#Phi of the original Cluster; nGoodMatches", 180, -3.2, 3.2, 20, 0.5, 20.5);
-    mnFakeMatchesPhi_layer[i] = new TH2D(Form("mnFakeMatchesPhi_layer_L%d", i), ";#Phi; nFakeMatches", 180, -3.2, 3.2, 20, 0.5, 20.5);
+    mnGoodMatchesPhiOriginal_layer[i] = new TH2D(Form("mnGoodMatchesPhiOriginal_layer_L%d", i), ";#Phi of the original Cluster; nGoodMatches", 90, -3.2, 3.2, 20, 0.5, 20.5);
+    mnFakeMatchesPhi_layer[i] = new TH2D(Form("mnFakeMatchesPhi_layer_L%d", i), ";#Phi; nFakeMatches", 90, -3.2, 3.2, 20, 0.5, 20.5);
     mnFakeMatchesPhiTrack_layer[i] = new TH2D(Form("mnFakeMatchesPhiTrack_layer_L%d", i), ";#Phi track; nFakeMatches", 1440, 0, 360, 20, 0.5, 20.5);
 
     denPt[i] = new TH1D(Form("denPt_L%d", i), Form("denPt_L%d", i), nbPt, 0, 7.5 /* xbins*/);
@@ -598,10 +598,10 @@ void EfficiencyStudy::init(InitContext& ic)
     numPtGood[i] = new TH1D(Form("numPtGood_L%d", i), Form("numPtGood_L%d", i), nbPt, 0, 7.5 /* xbins*/);
     numPtFake[i] = new TH1D(Form("numPtFake_L%d", i), Form("numPtFake_L%d", i), nbPt, 0, 7.5 /* xbins*/);
 
-    denPhi[i] = new TH1D(Form("denPhi_L%d", i), Form("denPhi_L%d", i), 180, -3.2, 3.2);
-    numPhi[i] = new TH1D(Form("numPhi_L%d", i), Form("numPhi_L%d", i), 180, -3.2, 3.2);
-    numPhiGood[i] = new TH1D(Form("numPhiGood_L%d", i), Form("numPhiGood_L%d", i), 180, -3.2, 3.2);
-    numPhiFake[i] = new TH1D(Form("numPhiFake_L%d", i), Form("numPhiFake_L%d", i), 180, -3.2, 3.2);
+    denPhi[i] = new TH1D(Form("denPhi_L%d", i), Form("denPhi_L%d", i), 90, -3.2, 3.2);
+    numPhi[i] = new TH1D(Form("numPhi_L%d", i), Form("numPhi_L%d", i), 90, -3.2, 3.2);
+    numPhiGood[i] = new TH1D(Form("numPhiGood_L%d", i), Form("numPhiGood_L%d", i), 90, -3.2, 3.2);
+    numPhiFake[i] = new TH1D(Form("numPhiFake_L%d", i), Form("numPhiFake_L%d", i), 90, -3.2, 3.2);
 
     denEta[i] = new TH1D(Form("denEta_L%d", i), Form("denEta_L%d", i), 200, -2, 2);
     numEta[i] = new TH1D(Form("numEta_L%d", i), Form("numEta_L%d", i), 200, -2, 2);
@@ -618,16 +618,16 @@ void EfficiencyStudy::init(InitContext& ic)
     numColGood[i] = new TH1D(Form("numColGood_L%d", i), Form("numColGood_L%d", i), 128, -0.5, 1023.5);
     numColFake[i] = new TH1D(Form("numColFake_L%d", i), Form("numColFake_L%d", i), 128, -0.5, 1023.5);
 
-    denZ[i] = new TH1D(Form("denZ_L%d", i), Form("denZ_L%d", i), 150, -15, 15);
-    numZ[i] = new TH1D(Form("numZ_L%d", i), Form("numZ_L%d", i), 150, -15, 15);
-    numZGood[i] = new TH1D(Form("numZGood_L%d", i), Form("numZGood_L%d", i), 150, -15, 15);
-    numZFake[i] = new TH1D(Form("numZFake_L%d", i), Form("numZFake_L%d", i), 150, -15, 15);
+    denZ[i] = new TH1D(Form("denZ_L%d", i), Form("denZ_L%d", i), 100, -15, 15);
+    numZ[i] = new TH1D(Form("numZ_L%d", i), Form("numZ_L%d", i), 100, -15, 15);
+    numZGood[i] = new TH1D(Form("numZGood_L%d", i), Form("numZGood_L%d", i), 100, -15, 15);
+    numZFake[i] = new TH1D(Form("numZFake_L%d", i), Form("numZFake_L%d", i), 100, -15, 15);
 
     mDenColEta[i] = new TH2D(Form("mDenColEta_L%d", i), Form("mDenColEta_L%d", i), 128, -0.5, 1023.5, 50, -1, 1);
     mNumColEta[i] = new TH2D(Form("mNumColEta_L%d", i), Form("mNumColEta_L%d", i), 128, -0.5, 1023.5, 50, -1, 1);
 
-    mDenRowPhi[i] = new TH2D(Form("mDenRowPhi_L%d", i), Form("mDenRowPhi_L%d", i), 128, -0.5, 511.5, 180, -3.2, 3.2);
-    mNumRowPhi[i] = new TH2D(Form("mNumRowPhi_L%d", i), Form("mNumRowPhi_L%d", i), 128, -0.5, 511.5, 180, -3.2, 3.2);
+    mDenRowPhi[i] = new TH2D(Form("mDenRowPhi_L%d", i), Form("mDenRowPhi_L%d", i), 128, -0.5, 511.5, 90, -3.2, 3.2);
+    mNumRowPhi[i] = new TH2D(Form("mNumRowPhi_L%d", i), Form("mNumRowPhi_L%d", i), 128, -0.5, 511.5, 90, -3.2, 3.2);
 
     mDenRowCol[i] = new TH2D(Form("mDenRowCol_L%d", i), Form("mDenRowCol_L%d", i), 128, -0.5, 511.5, 128, -0.5, 1023.5);
     mNumRowCol[i] = new TH2D(Form("mNumRowCol_L%d", i), Form("mNumRowCol_L%d", i), 128, -0.5, 511.5, 128, -0.5, 1023.5);
@@ -639,9 +639,9 @@ void EfficiencyStudy::init(InitContext& ic)
     IPOriginalifDuplicatedxy[i] = std::make_unique<TH1D>(Form("IPOriginalifDuplicatedxy_L%d", i), Form("IPOriginalifDuplicatedxy_L%d", i), 1000, -0.005, 0.005);
     IPOriginalifDuplicatedz[i] = std::make_unique<TH1D>(Form("IPOriginalifDuplicatedz_L%d", i), Form("IPOriginalifDuplicatedz_L%d", i), 200, -10, 10);
 
-    phiFound[i] = new TH1D(Form("phiFound_L%d", i), Form("phiFound_L%d", i), 180, -3.2, 3.2);
+    phiFound[i] = new TH1D(Form("phiFound_L%d", i), Form("phiFound_L%d", i), 190, -3.2, 3.2);
     rowFound[i] = new TH1D(Form("rowFound_L%d", i), Form("rowFound_L%d", i), 128, -0.5, 511.5);
-    phiNotFound[i] = new TH1D(Form("phiNotFound_L%d", i), Form("phiNotFound_L%d", i), 180, -3.2, 3.2);
+    phiNotFound[i] = new TH1D(Form("phiNotFound_L%d", i), Form("phiNotFound_L%d", i), 90, -3.2, 3.2);
     rowNotFound[i] = new TH1D(Form("rowNotFound_L%d", i), Form("rowNotFound_L%d", i), 128, -0.5, 511.5);
     etaFound[i] = new TH1D(Form("etaFound_L%d", i), Form("etaFound_L%d", i), 200, -2, 2);
     etaNotFound[i] = new TH1D(Form("etaNotFound_L%d", i), Form("etaNotFound_L%d", i), 200, -2, 2);
@@ -649,8 +649,8 @@ void EfficiencyStudy::init(InitContext& ic)
     xyIPNotFound[i] = new TH1D(Form("xyIPNotFound_L%d", i), Form("xyIPNotFound_L%d", i), 200, -0.002, 0.002);
     zIPFound[i] = new TH1D(Form("zIPFound_L%d", i), Form("xyIPFound_L%d", i), 200, -10, 10);
     zIPNotFound[i] = new TH1D(Form("zIPNotFound_L%d", i), Form("zIPNotFound_L%d", i), 200, -10, 10);
-    zFound[i] = new TH1D(Form("zFound_L%d", i), Form("zFound_L%d", i), 150, -15, 15);
-    zNotFound[i] = new TH1D(Form("zNotFound%d", i), Form("zNotFound%d", i), 150, -15, 15);
+    zFound[i] = new TH1D(Form("zFound_L%d", i), Form("zFound_L%d", i), 100, -15, 15);
+    zNotFound[i] = new TH1D(Form("zNotFound%d", i), Form("zNotFound%d", i), 100, -15, 15);
     colFoundOriginalVsDuplicated[i] = new TH2D(Form("colFoundOriginalVsDuplicated_L%d", i), Form("colFoundOriginalVsDuplicated_L%d; Col Original cluster; Col Overlap cluster", i), 9216, -0.5, 9215.5, 9216, -0.5, 9215.5);
     colFoundOriginal[i] = new TH1D(Form("colFoundOriginal_L%d", i), Form("colFoundOriginal_L%d; Col Original cluster;", i), 9216, -0.5, 9215.5);
     colNotFound[i] = new TH1D(Form("colNotFound_L%d", i), Form("colNotFound_L%d", i), 9216, -0.5, 9215.5);
@@ -668,9 +668,9 @@ void EfficiencyStudy::init(InitContext& ic)
       mNGoodMatchesEta[i][j] = std::make_unique<TH1D>(Form("mNGoodMatchesEta_L%d_pt%d", i, j), Form("%f < #it{p}_{T} < %f GeV/c; #eta; Number of good matches L%d", mrangesPt[j][0], mrangesPt[j][1], i), 40, -2, 2);
       mNFakeMatchesEta[i][j] = std::make_unique<TH1D>(Form("mNFakeMatchesEta_L%d_pt%d", i, j), Form("%f < #it{p}_{T} < %f GeV/c; #eta; Number of fake matches L%d", mrangesPt[j][0], mrangesPt[j][1], i), 40, -2, 2);
 
-      mDuplicatedPhi[i][j] = std::make_unique<TH1D>(Form("mDuplicatedPhi_L%d_pt%d", i, j), Form("%f < #it{p}_{T} < %f GeV/c; #phi; Number of duplicated clusters L%d", mrangesPt[j][0], mrangesPt[j][1], i), 180, -3.2, 3.2);
-      mNGoodMatchesPhi[i][j] = std::make_unique<TH1D>(Form("mNGoodMatchesPhi_L%d_pt%d", i, j), Form("%f < #it{p}_{T} < %f GeV/c; #phi; Number of good matches L%d", mrangesPt[j][0], mrangesPt[j][1], i), 180, -3.2, 3.2);
-      mNFakeMatchesPhi[i][j] = std::make_unique<TH1D>(Form("mNFakeMatchesPhi_L%d_pt%d", i, j), Form("%f < #it{p}_{T} < %f GeV/c; #phi; Number of fake matches L%d", mrangesPt[j][0], mrangesPt[j][1], i), 180, -3.2, 3.2);
+      mDuplicatedPhi[i][j] = std::make_unique<TH1D>(Form("mDuplicatedPhi_L%d_pt%d", i, j), Form("%f < #it{p}_{T} < %f GeV/c; #phi; Number of duplicated clusters L%d", mrangesPt[j][0], mrangesPt[j][1], i), 90, -3.2, 3.2);
+      mNGoodMatchesPhi[i][j] = std::make_unique<TH1D>(Form("mNGoodMatchesPhi_L%d_pt%d", i, j), Form("%f < #it{p}_{T} < %f GeV/c; #phi; Number of good matches L%d", mrangesPt[j][0], mrangesPt[j][1], i), 90, -3.2, 3.2);
+      mNFakeMatchesPhi[i][j] = std::make_unique<TH1D>(Form("mNFakeMatchesPhi_L%d_pt%d", i, j), Form("%f < #it{p}_{T} < %f GeV/c; #phi; Number of fake matches L%d", mrangesPt[j][0], mrangesPt[j][1], i), 90, -3.2, 3.2);
     }
   }
   gStyle->SetPalette(55);
@@ -2559,6 +2559,7 @@ void EfficiencyStudy::getEfficiency(bool isMC)
         auto layerOriginal = mGeometry->getLayer(clusOriginal.getSensorID());
 
         UShort_t rowOriginal = clusOriginal.getRow();
+        UShort_t colOriginal = clusOriginal.getCol();
 
 
         if (clusOriginal.getChipID()>=0 && clusOriginal.getChipID() <= 8) {
@@ -2643,7 +2644,7 @@ void EfficiencyStudy::getEfficiency(bool isMC)
           continue;
         }       
 
-        if (abs(clusOriginalPointGlob.z()) >= 10) { ///// removing gap between bottom and top barrels
+        if (abs(clusOriginalPointGlob.z()) >= 10) { /// removing external z
           keepTrack = false;
           continue;
         }
@@ -2844,7 +2845,7 @@ void EfficiencyStudy::getEfficiency(bool isMC)
           etaNotFound[layerOriginal]->Fill(eta);
           xyIPNotFound[layerOriginal]->Fill(ip[0]);
           zIPNotFound[layerOriginal]->Fill(ip[1]);
-          std::cout << "Not found. Original has col " <<clusOriginal.getCol()<<"  row "<<clusOriginal.getRow()<<"  chip "<<clusOriginal.getChipID()<<"  stave "<<staveOriginal<<"  layer "<<layerOriginal<<"  z "<<clusOriginalPointGlob.z()<<"  x "<<clusOriginalPointGlob.x()<<"  y "<<clusOriginalPointGlob.y()<<"  phi "<<phiOriginal<<"  eta "<<eta <<"   radius " <<sqrt(clusOriginalPointGlob.x()*clusOriginalPointGlob.x()+clusOriginalPointGlob.y()*clusOriginalPointGlob.y())<<std::endl;
+          // std::cout << "Not found. Original has col " <<clusOriginal.getCol()<<"  row "<<clusOriginal.getRow()<<"  chip "<<clusOriginal.getChipID()<<"  stave "<<staveOriginal<<"  layer "<<layerOriginal<<"  z "<<clusOriginalPointGlob.z()<<"  x "<<clusOriginalPointGlob.x()<<"  y "<<clusOriginalPointGlob.y()<<"  phi "<<phiOriginal<<"  eta "<<eta <<"   radius " <<sqrt(clusOriginalPointGlob.x()*clusOriginalPointGlob.x()+clusOriginalPointGlob.y()*clusOriginalPointGlob.y())<<std::endl;
           continue;
         }
 
@@ -2875,8 +2876,8 @@ void EfficiencyStudy::getEfficiency(bool isMC)
         mNumRowPhi[layerOriginal]->Fill(clusOriginal.getRow(), clusOriginalPointGlob.z());
         mNumRowCol[layerOriginal]->Fill(clusOriginal.getRow(), clusOriginal.getCol());
         numLayers->Fill(layerOriginal);
-        std::cout<<"++++++++++++++++++++++++++ check positions +++++++++++++++++++"<<std::endl;
-        std::cout<<"layer: "<<layerOriginal<<" st. orig = "<< staveOriginal<< " st. dupl = "<<mGeometry->getStave(clusDuplicatedSelected.getSensorID())<<"  row orig = "<<rowOriginal<<"  row dupl = "<<clusDuplicatedSelected.getRow()<<std::endl;
+        // std::cout<<"++++++++++++++++++++++++++ check positions +++++++++++++++++++"<<std::endl;
+        // std::cout<<"layer: "<<layerOriginal<<" st. orig = "<< staveOriginal<< " st. dupl = "<<mGeometry->getStave(clusDuplicatedSelected.getSensorID())<<"  row orig = "<<rowOriginal<<"  row dupl = "<<clusDuplicatedSelected.getRow()<<std::endl;
 
         // checking if it is a good or fake match looking at the labels (only if isMC)
         if (isMC) {
@@ -3019,6 +3020,7 @@ void EfficiencyStudy::getEfficiencyAndTrackInfo(bool isMC)
         // }
 
         UShort_t rowOriginal = clusOriginal.getRow();
+        UShort_t colOriginal = clusOriginal.getCol();
 
         if (layerOriginal >= NLAYERS) {
           continue;
